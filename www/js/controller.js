@@ -4657,6 +4657,20 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 /** SignIn Controller **/
 /****************************************/
 .controller('SignInCtrl', function($scope, $state, $http, Scopes, $ionicHistory,$ionicLoading, $cordovaOauth) {
+	/* Check source using*/
+	var typeBrowser = getTypeWebBrowser();
+	//typeBrowser = "DEVICE";
+	//console.log(typeBrowser)
+	if (typeBrowser == "DEVICE") {
+		document.getElementById("loginGoogleDevice").style.display="block";
+		document.getElementById("loginGoogleWebBrowser").style.display="none";
+	} else {
+		//console.log(document.getElementById("loginGoogleDevice").style.display);
+		document.getElementById("loginGoogleDevice").style.display="none";
+		document.getElementById("loginGoogleWebBrowser").style.display="block";
+	}
+	
+	
 	function checkExist(value, JSONArray){
 		var hasMatch =false;
 		for (var index = 0; index < JSONArray.length; index++) {
@@ -4707,34 +4721,82 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 	
 	
 	/* Test Login with Google Account */
-	$scope.googleSignIn_1 = function() {
-        $cordovaOauth.google("254673914223-tv4pvoig9ouql2puvsuigmiuabaj87u8.apps.googleusercontent.com", ["https://www.googleapis.com/auth/urlshortener", "https://www.googleapis.com/auth/userinfo.email"]).then(function(result) {
+	$scope.googleSignIn_Device = function() {
+        $cordovaOauth.google("254673914223-tv4pvoig9ouql2puvsuigmiuabaj87u8.apps.googleusercontent.com", 
+        		            ["https://www.googleapis.com/auth/urlshortener", 
+        		             "https://www.googleapis.com/auth/userinfo.email"])
+        .then(function(result) {
             console.log(JSON.stringify(result));
+            console.log("Thanh Cong");
         }, function(error) {
             console.log(error);
         });
     };
 	
     /* Test Login with Google Account */
-	$scope.googleSignIn_2 = function() {
-		$http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
-		var ref = window.open('https://accounts.google.com/o/oauth2/auth?client_id=254673914223-tv4pvoig9ouql2puvsuigmiuabaj87u8.apps.googleusercontent.com&redirect_uri=http://127.0.01:8100/landinfo/plots&scope=https://www.googleapis.com/auth/urlshortener&approval_prompt=force&response_type=code&access_type=offline', '_blank', 'location=no');
-     	
-		ref.addEventListener('loadstart', function(event) {
-            if((event.url).startsWith("http://localhost/callback")) {
-                requestToken = (event.url).split("code=")[1];
-                $http({method: "post", url: "https://accounts.google.com/o/oauth2/token", data: "client_id=254673914223-tv4pvoig9ouql2puvsuigmiuabaj87u8.apps.googleusercontent.com&client_secret=VIlyqfrpXMNJCx5gJREdftaz&redirect_uri=http://localhost/callback" + "&grant_type=authorization_code" + "&code=" + requestToken })
-                    .success(function(data) {
-                        accessToken = data.access_token;
-                        console.log(data);
-                    })
-                    .error(function(data, status) {
-                        alert("LPKS ERROR: " + data);
-                    });
-                ref.close();
-            }
-        });
+	$scope.googleSignIn_WebBrowser = function() {
+		var params = {
+			'clientid':'254673914223-tv4pvoig9ouql2puvsuigmiuabaj87u8.apps.googleusercontent.com',
+			'cookiepolicy':'single_host_origin',
+			'callback' : loginCallBack,
+			'approvalprompt':'force',
+			'scope' :'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile'
+		};
+		gapi.client.setApiKey("AIzaSyCUYSNGMdVkeinZik6YiCyAQcuI0vIqjZk");
+		gapi.auth.signIn(params);
 		
+		function loginCallBack(result) {
+			console.log(result);
+			//console.log("ABC" + gapi.auth.getToken());
+			console.log(result.status);
+			if (result.status.google_logged_in === true){
+				console.log("Access Token : " + result.access_token);
+				/* Request to get Email */
+				$http({
+				    method: 'GET',
+				    url: "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + result.access_token,
+				    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+			    }).success(
+					function(data, status, headers, config) {
+						var email = data.email;
+						var password = data.id;
+						var localData = result.access_token;
+				    	var objAuth = window.localStorage.getItem("AUTHENTICATION_LIST");
+						if (objAuth === null || objAuth === 'null'){
+								var listAuthentication = { authentication : []};
+								listAuthentication.authentication.push({
+									"email" : email,
+									"password" : password,
+									"json_auth_data" : localData
+								});
+						} else {
+								var listAuthentication = JSON.parse(objAuth);
+								if (checkExist(email, listAuthentication['authentication']) == false){
+									listAuthentication['authentication'].push({
+										"email" : email,
+										"password" : password,
+										"json_auth_data" : localData
+									});
+								} else {
+									console.log("Update");
+									updateAuthExist(email,localData,listAuthentication['authentication']);
+								}	
+						}
+						window.localStorage.setItem("current_json_auth_data", localData);
+						window.localStorage.setItem("current_email",email);
+						window.localStorage.setItem("current_password",password);
+	
+						window.localStorage.setItem("AUTHENTICATION_LIST",JSON.stringify(listAuthentication));
+						window.localStorage.setItem("PREVIOUS_PAGE","LOGIN_PAGE");
+						$state.go('landinfo.plots');	
+				}).error(function(err) {
+			    	alert("Error");
+			    });
+			} else {
+				 alert(err.error,'Authentication Error - Login by Google Account is not successful');
+			}
+			
+		};
     };
     
     if (typeof String.prototype.startsWith != 'function') {
@@ -4799,6 +4861,6 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 						}).error(function(err) {
 							$ionicLoading.hide();
 					        alert(err.error,'Authentication Error');
-				});  // End HTTP POST LOGIN
+				        });  // End HTTP POST LOGIN
 	}; // End SignIn
 }); // End Controller SignInCtrl

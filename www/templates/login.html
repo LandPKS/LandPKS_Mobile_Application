@@ -1,6 +1,7 @@
 <link href="css/login.css" rel="stylesheet">
 <div>
 	<ion-view view-title="LandPKS Sign-In" hide-back-button="true" cache-view="false"> <ion-content>
+	<!--  
 	<div class="list">
 		<label class="item item-input lpks-id"> 
 			<input type="email" name="email" id="email" placeholder="Email" ng-model="email"> 
@@ -9,19 +10,25 @@
 		   <input type="password" name="password" id="password" placeholder="Password" ng-model="password"> 
 		</label>
 	</div>
+	-->
 	<div class="padding">
-		<button class="button button-block button-balanced"
+	    <!--  
+		<button id="loginOurselve" class="button button-block button-balanced"
 			ng-click="signIn(email,password)">Sign-In</button>
+		 --> 	
+		<button id="loginGoogleDevice" class="button button-block button-positive" style="display:none;"
+			ng-click="googleSignIn_Device();">Sign-In With Google Account</button>
+		
+		<button id="loginGoogleWebBrowser"  class="button button-block button-positive" style="display:none;"
+			ng-click="googleSignIn_WebBrowser();">Sign-In With Google Account</button>
+		
+		
 		<!--  	
-		<button class="button button-block button-positive"
-			ng-click="googleSignIn_1();">Sign-In With Google Method 1</button>
-		<button class="button button-block button-positive"
-			ng-click="googleSignIn_2();">Sign-In With Google Method 2</button>
 		<button class="button button-block button-positive"
 			ng-click="googleSignIn_3();">Sign-In With Google Method 3</button>
 		-->	
 		<p class="text-center">
-			<a class="lpks-link" href="#/forgot-password">Forgot password</a>
+			<a class="lpks-link" href="https://www.google.com/accounts/recovery/">Forgot password</a>
 		</p>
 	</div>
 	</ion-content> </ion-view>
