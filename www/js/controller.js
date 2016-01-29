@@ -100,10 +100,10 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 	} else {
 		/* Run on browser */
 		/* Visible all */
-		document.getElementById("div_north").style.display = "block";
-		document.getElementById("div_east").style.display = "block";
-		document.getElementById("div_south").style.display = "block";
-		document.getElementById("div_west").style.display = "block";
+		document.getElementById("aTagNorth").style.visibility = "visible";
+		document.getElementById("aTagEast").style.visibility = "visible";
+		document.getElementById("aTagSouth").style.visibility = "visible";
+		document.getElementById("aTagWest").style.visibility = "visible";
 		
 		$scope.navigator_landscape_north = "landinfo.take_photo_landscape_north_browser";
 		$scope.navigator_landscape_east = "landinfo.take_photo_landscape_east_browser";
