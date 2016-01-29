@@ -35,6 +35,14 @@
                         {
                             "xml": "<preference name=\"CameraUsesGeolocation\" value=\"false\" />",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Compass\"><param name=\"ios-package\" value=\"CDVCompass\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"InAppBrowser\"><param name=\"ios-package\" value=\"CDVInAppBrowser\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -44,13 +52,13 @@
                     "CoreGraphics.framework": [
                         {
                             "xml": false,
-                            "count": 3
+                            "count": 4
                         }
                     ],
                     "CoreLocation.framework": [
                         {
                             "xml": false,
-                            "count": 2
+                            "count": 3
                         }
                     ],
                     "QuartzCore.framework": [],
@@ -67,6 +75,12 @@
                         }
                     ],
                     "MobileCoreServices.framework": [
+                        {
+                            "xml": false,
+                            "count": 1
+                        }
+                    ],
+                    "AVFoundation.framework": [
                         {
                             "xml": false,
                             "count": 1
@@ -102,7 +116,13 @@
         "cordova-plugin-geolocation": {
             "PACKAGE_NAME": "com.ionicframework.ionicdemo539879"
         },
-        "org.apache.cordova.camera": {
+        "cordova-plugin-camera": {
+            "PACKAGE_NAME": "org.landpotential.lpks.landinfo"
+        },
+        "cordova-plugin-device-orientation": {
+            "PACKAGE_NAME": "org.landpotential.lpks.landinfo"
+        },
+        "cordova-plugin-inappbrowser": {
             "PACKAGE_NAME": "org.landpotential.lpks.landinfo"
         }
     },

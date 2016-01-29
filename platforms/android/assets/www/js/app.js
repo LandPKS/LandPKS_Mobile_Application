@@ -47,6 +47,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.accounts', {
       url: "/accounts",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/accounts.html",
@@ -102,6 +103,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.landcover', {
       url: "/landcover",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/landcover.html",
@@ -111,6 +113,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.landuse', {
       url: "/landuse",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/landuse.html",
@@ -141,6 +144,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.slopeshape', {
       url: "/slopeshape",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/slopeshape.html",
@@ -151,6 +155,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.soilcondition', {
       url: "/soilcondition",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/soilcondition.html",
@@ -171,6 +176,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.photos', {
       url: "/photos",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/photos.html",
@@ -190,6 +196,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.results', {
       url: "/results",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/results.html",
@@ -199,6 +206,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
      .state('landinfo.review-results', {
       url: "/review-results",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/review-results.html",
@@ -218,6 +226,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.soillayers2', {
       url: "/soillayers2",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/soillayers2.html",
@@ -227,6 +236,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.soillayers3', {
       url: "/soillayers3",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/soillayers3.html",
@@ -236,6 +246,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.soillayers4', {
       url: "/soillayers4",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/soillayers4.html",
@@ -245,6 +256,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.soillayers5', {
       url: "/soillayers5",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/soillayers5.html",
@@ -254,6 +266,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.soillayers6', {
       url: "/soillayers6",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/soillayers6.html",
@@ -263,6 +276,7 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
     })
     .state('landinfo.soillayers7', {
       url: "/soillayers7",
+      cache: false,
       views: {
         'home-tab': {
           templateUrl: "templates/soillayers7.html",
@@ -275,6 +289,22 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
       views: {
         'about-tab': {
           templateUrl: "templates/about.html"
+        }
+      }
+    })
+   .state('landinfo.app_information', {
+      url: "/app_information",
+      views: {
+        'about-tab': {
+          templateUrl: "templates/app_information.html"
+        }
+      }
+    })
+   .state('landinfo.data_policy', {
+      url: "/data_policy",
+      views: {
+        'about-tab': {
+          templateUrl: "templates/data_policy.html"
         }
       }
     })
@@ -313,7 +343,146 @@ angular.module('ionicApp', ['ionic','ionicApp.controller','ngCordova'])
         }
       }
     })
-    .state('landinfo.settings', {
+  .state('landinfo.take_photo_soil_pit_browser', {
+      url: "/take_photo_soil_pit_browser",
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_soil_pit_browser.html",
+          controller: 'Take_Photo_Soil_Pit_Browser_Ctrl'
+          
+        }
+      }
+    })
+  .state('landinfo.take_photo_soil_pit_device', {
+      url: "/take_photo_soil_pit_device",
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_soil_pit_device.html",
+          controller: 'Take_Photo_Soil_Pit_Device_Ctrl'
+          
+        }
+      }
+    }) 
+  .state('landinfo.take_photo_soil_sample_browser', {
+      url: "/take_photo_soil_sample_browser",
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_soil_sample_browser.html",
+          controller: 'Take_Photo_Soil_Sample_Browser_Ctrl'
+          
+        }
+      }
+    })
+   .state('landinfo.take_photo_soil_sample_device', {
+      url: "/take_photo_soil_sample_device",
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_soil_sample_device.html",
+          controller: 'Take_Photo_Soil_Sample_Device_Ctrl'
+          
+        }
+      }
+    })
+   .state('landinfo.take_photos_landscape', {
+      url: "/take_photos_landscape",
+      cache: false,
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photos_landscape.html",
+          controller: 'Take_Photo_LandScape_Ctrl'
+          
+        }
+      }
+    })
+   .state('landinfo.take_photo_landscape_north_browser', {
+      url: "/take_photo_landscape_north_browser",
+      cache: false,
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_landscape_north_browser.html",
+          controller: 'Take_Photo_LandScape_North_Browser_Ctrl'
+          
+        }
+      }
+    })
+    .state('landinfo.take_photo_landscape_north_device', {
+      url: "/take_photo_landscape_north_device",
+      cache: false,
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_landscape_north_device.html",
+          controller: 'Take_Photo_LandScape_North_Device_Ctrl'
+          
+        }
+      }
+    })
+   .state('landinfo.take_photo_landscape_east_browser', {
+      url: "/take_photo_landscape_east_browser",
+      cache: false,
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_landscape_east_browser.html",
+          controller: 'Take_Photo_LandScape_East_Browser_Ctrl'
+          
+        }
+      }
+    })
+    .state('landinfo.take_photo_landscape_east_device', {
+      url: "/take_photo_landscape_east_device",
+      cache: false,
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_landscape_east_device.html",
+          controller: 'Take_Photo_LandScape_East_Device_Ctrl'
+          
+        }
+      }
+    })
+   .state('landinfo.take_photo_landscape_south_browser', {
+      url: "/take_photo_landscape_south_browser",
+      cache: false,
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_landscape_south_browser.html",
+          controller: 'Take_Photo_LandScape_South_Browser_Ctrl'
+          
+        }
+      }
+    })
+    .state('landinfo.take_photo_landscape_south_device', {
+      url: "/take_photo_landscape_south_device",
+      cache: false,
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_landscape_south_device.html",
+          controller: 'Take_Photo_LandScape_South_Device_Ctrl'
+          
+        }
+      }
+    })
+    .state('landinfo.take_photo_landscape_west_browser', {
+      url: "/take_photo_landscape_west_browser",
+      cache: false,
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_landscape_west_browser.html",
+          controller: 'Take_Photo_LandScape_West_Browser_Ctrl'
+          
+        }
+      }
+    })
+    .state('landinfo.take_photo_landscape_west_device', {
+      url: "/take_photo_landscape_west_device",
+      cache: false,
+      views: {
+        'home-tab': {
+          templateUrl: "templates/take_photo_landscape_west_device.html",
+          controller: 'Take_Photo_LandScape_West_Device_Ctrl'
+          
+        }
+      }
+    })
+  .state('landinfo.settings', {
       url: "/settings",
       views: {
         'settings-tab': {

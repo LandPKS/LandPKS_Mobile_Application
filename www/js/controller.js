@@ -65,33 +65,34 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 			  window.addEventListener('deviceorientation', function(eventData) {
 			    // alpha is the compass direction the device is facing in degrees
 			    var dir = eventData.alpha
+			    
 			    if ((dir >= 0 && dir <= 1) || (dir >= 359 && dir <= 360)){
-			    	document.getElementById("div_north").style.display = "block";
-					document.getElementById("div_east").style.display = "none";
-					document.getElementById("div_south").style.display = "none";
-					document.getElementById("div_west").style.display = "none";
+			    	document.getElementById("aTagNorth").style.visibility = "visible";
+					document.getElementById("aTagEast").style.visibility = "hidden";
+					document.getElementById("aTagSouth").style.visibility = "hidden";
+					document.getElementById("aTagWest").style.visibility = "hidden";
 					seeToast2("NORTH",2000);
 			    } else if (dir >= 179 && dir <= 181){
-			    	document.getElementById("div_north").style.display = "none";
-					document.getElementById("div_east").style.display = "none";
-					document.getElementById("div_south").style.display = "block";
-					document.getElementById("div_west").style.display = "none";
+			    	document.getElementById("aTagNorth").style.visibility = "hidden";
+					document.getElementById("aTagEast").style.visibility = "hidden";
+					document.getElementById("aTagSouth").style.visibility = "visible";
+					document.getElementById("aTagWest").style.visibility = "hidden";
 					seeToast2("SOUTH",2000);
 			    } else if (dir>= 89 && dir <= 91){
-			    	document.getElementById("div_north").style.display = "none";
-					document.getElementById("div_east").style.display = "block";
-					document.getElementById("div_south").style.display = "none";
-					document.getElementById("div_west").style.display = "none";
+			    	document.getElementById("aTagNorth").style.visibility = "hidden";
+					document.getElementById("aTagEast").style.visibility = "visible";
+					document.getElementById("aTagSouth").style.visibility = "hidden";
+					document.getElementById("aTagWest").style.visibility = "hidden";
 					seeToast2("EAST",2000);
 			    } else if (dir>= 269 && dir <= 271) {
-			    	document.getElementById("div_north").style.display = "none";
-					document.getElementById("div_east").style.display = "none";
-					document.getElementById("div_south").style.display = "none";
-					document.getElementById("div_west").style.display = "block";
+			    	document.getElementById("aTagNorth").style.visibility = "hidden";
+					document.getElementById("aTagEast").style.visibility = "hidden";
+					document.getElementById("aTagSouth").style.visibility = "hidden";
+					document.getElementById("aTagWest").style.visibility = "visible";
 					seeToast2("WEST",2000);
 			    } else {
 			    	
-			    }
+			    } 
 			  }, false);
 		} else {
 			  console.log("Not supported compass");
@@ -3499,7 +3500,7 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 /****************************************/
 .controller('AddPlot_Review_Ctrl',function($scope,$state,$ionicLoading,$http){
 	/* Get Authentication data */
-	var json_auth_data = JSON.parse(window.localStorage.getItem("current_json_auth_data"));
+	var json_auth_data = window.localStorage.getItem("current_json_auth_data");
 	if (isEmpty(json_auth_data.auth_key)){
 		document.getElementById('btnSubmitPlot').setAttribute("disabled","disabled");
 	}
@@ -4698,27 +4699,6 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 		//$ionicHistory.clearHistory();
 	}
 	
-	/* Test login with Google Account */
-	$scope.googleSignIn_3 = function() {
-	    $ionicLoading.show({
-	      template: 'Logging in...'
-	    });
-	    
-	    window.plugins.googleplus.login(
-	      {},
-	      function (user_data) {
-	        // For the purpose of this example I will store user data on local storage
-	        console.log(user_data);
-
-	        $ionicLoading.hide();
-	        console.log("Successfully");
-	      },
-	      function (msg) {
-	        $ionicLoading.hide();
-	      }
-	    );
-	  };
-	
 	
 	/* Test Login with Google Account */
 	$scope.googleSignIn_Device = function() {
@@ -4726,10 +4706,51 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
         		            ["https://www.googleapis.com/auth/urlshortener", 
         		             "https://www.googleapis.com/auth/userinfo.email"])
         .then(function(result) {
-            console.log(JSON.stringify(result));
-            console.log("Thanh Cong");
+            var access_token = result.access_token;
+            /* Request to get Email */
+			$http({
+			    method: 'GET',
+			    url: "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + result.access_token,
+			    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+		    }).success(
+				function(data, status, headers, config) {
+					var email = data.email;
+					var password = data.id;
+					var localData = result.access_token;
+			    	var objAuth = window.localStorage.getItem("AUTHENTICATION_LIST");
+					if (objAuth === null || objAuth === 'null'){
+							var listAuthentication = { authentication : []};
+							listAuthentication.authentication.push({
+								"email" : email,
+								"password" : password,
+								"json_auth_data" : localData
+							});
+					} else {
+							var listAuthentication = JSON.parse(objAuth);
+							if (checkExist(email, listAuthentication['authentication']) == false){
+								listAuthentication['authentication'].push({
+									"email" : email,
+									"password" : password,
+									"json_auth_data" : localData
+								});
+							} else {
+								console.log("Update");
+								updateAuthExist(email,localData,listAuthentication['authentication']);
+							}	
+					}
+					window.localStorage.setItem("current_json_auth_data", localData);
+					window.localStorage.setItem("current_email",email);
+					window.localStorage.setItem("current_password",password);
+
+					window.localStorage.setItem("AUTHENTICATION_LIST",JSON.stringify(listAuthentication));
+					window.localStorage.setItem("PREVIOUS_PAGE","LOGIN_PAGE");
+					$state.go('landinfo.plots');	
+			}).error(function(err) {
+		    	alert("Authentication Error ! Please re-try again");
+		    });
         }, function(error) {
             console.log(error);
+            alert("Authentication Error ! Please re-try again")
         });
     };
 	
@@ -4747,6 +4768,9 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 		
 		function loginCallBack(result) {
 			console.log(result);
+			var email = "";
+			var password = "";
+			var localData = "";
 			//console.log("ABC" + gapi.auth.getToken());
 			console.log(result.status);
 			if (result.status.google_logged_in === true){
@@ -4758,9 +4782,9 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 				    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 			    }).success(
 					function(data, status, headers, config) {
-						var email = data.email;
-						var password = data.id;
-						var localData = result.access_token;
+						email = data.email;
+						password = data.id;
+					    localData = result.access_token;
 				    	var objAuth = window.localStorage.getItem("AUTHENTICATION_LIST");
 						if (objAuth === null || objAuth === 'null'){
 								var listAuthentication = { authentication : []};
@@ -4790,10 +4814,10 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 						window.localStorage.setItem("PREVIOUS_PAGE","LOGIN_PAGE");
 						$state.go('landinfo.plots');	
 				}).error(function(err) {
-			    	alert("Error");
+			    	alert("Authentication Error ! Please re-try again");
 			    });
 			} else {
-				 alert(err.error,'Authentication Error - Login by Google Account is not successful');
+				 alert(err.error,'Authentication Error ! Please re-try again');
 			}
 			
 		};

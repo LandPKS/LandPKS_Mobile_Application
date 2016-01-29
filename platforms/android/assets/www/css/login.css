@@ -1,0 +1,116 @@
+@charset "UTF-8";
+/* CSS Document */
+
+body {
+	background-color: #EDEDED;
+	color: black;
+	font-family: Gotham, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	margin: 0px;
+	padding: 0px;
+}
+
+
+
+.lpks-id {
+	width: 95%;
+	height: auto;
+	color: black;
+	background-color: white;
+	border-collapse: collapse;
+	align: center;
+	border-radius: 10px;
+	display: block;
+    margin-left: auto;
+    margin-right: auto;
+	margin-top: 20px;
+	text-align: left;
+	text-indent: 20px;
+	line-height: 30px;
+	font-size: 14px;
+	padding: 5px;
+}
+
+.othercomponent {
+	width: 95%;
+	height: auto;
+	color: black;
+	background-color: white;
+	border-collapse: collapse;
+	align: center;
+	border-radius: 10px;
+	display: block;
+    margin-left: auto;
+    margin-right: auto;
+	margin-top: 10px;
+	text-align: left;
+	text-indent: 20px;
+	line-height: 30px;
+	font-size: 14px;
+	padding: 5px;
+}
+
+.lpks-input {
+	text-align: center;
+	font-family: Gotham, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: medium;
+	border: none;
+	width: 95%;
+	display: block;
+	margin: 0 auto;
+}
+
+.lpks-button {
+	background-color: #009100;
+	font-family: Gotham, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	color: white;
+	font-size: 14px;
+	border-radius: 10px;
+	box-shadow: none;
+	border: none;
+	padding: 10px;
+	display: block;
+	margin: 0 auto;
+	margin-top: 10px;
+	width: 40%;
+}
+
+.lpks-link {
+	color: black;
+	text-align: center;
+	display: block;
+	margin-top: 10px;
+	}
+	
+#customBtn {
+      display: inline-block;
+      background: #4285f4;
+      color: white;
+      width: 190px;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+    #customBtn:hover {
+      cursor: pointer;
+    }
+    span.label {
+      font-weight: bold;
+    }
+    span.icon {
+      background: url('/identity/sign-in/g-normal.png') transparent 5px 50% no-repeat;
+      display: inline-block;
+      vertical-align: middle;
+      width: 42px;
+      height: 42px;
+      border-right: #2265d4 1px solid;
+    }
+    span.buttonText {
+      display: inline-block;
+      vertical-align: middle;
+      padding-left: 42px;
+      padding-right: 42px;
+      font-size: 14px;
+      font-weight: bold;
+      /* Use the Roboto font that is loaded in the <head> */
+      font-family: 'Roboto', sans-serif;
+    }

@@ -20,7 +20,10 @@
     "cordova-plugin-console",
     "cordova-plugin-whitelist",
     "cordova-plugin-splashscreen",
-    "com.ionic.keyboard"
+    "com.ionic.keyboard",
+    "cordova-plugin-camera",
+    "cordova-plugin-device-orientation",
+    "cordova-plugin-inappbrowser@1.0.0"
   ],
   "cordovaPlatforms": []
 }
