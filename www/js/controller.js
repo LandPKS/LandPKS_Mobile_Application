@@ -4746,11 +4746,13 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 					window.localStorage.setItem("PREVIOUS_PAGE","LOGIN_PAGE");
 					$state.go('landinfo.plots');	
 			}).error(function(err) {
-		    	alert("Authentication Error ! Please re-try again");
+		    	//alert("Authentication Error ! Please re-try again");
+		    	alert(err.error)
 		    });
         }, function(error) {
             console.log(error);
-            alert("Authentication Error ! Please re-try again")
+            //alert("Authentication Error ! Please re-try again")
+            alert(error)
         });
     };
 	
@@ -4814,10 +4816,12 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 						window.localStorage.setItem("PREVIOUS_PAGE","LOGIN_PAGE");
 						$state.go('landinfo.plots');	
 				}).error(function(err) {
-			    	alert("Authentication Error ! Please re-try again");
+			    	//alert("Authentication Error ! Please re-try again");
+			    	alert(err.error);
 			    });
 			} else {
-				 alert(err.error,'Authentication Error ! Please re-try again');
+				 //alert(err.error,'Authentication Error ! Please re-try again');
+				 alert(err.error);
 			}
 			
 		};
@@ -4884,7 +4888,8 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 						
 						}).error(function(err) {
 							$ionicLoading.hide();
-					        alert(err.error,'Authentication Error');
+					        //alert(err.error,'Authentication Error');
+					        alert(err.error);
 				        });  // End HTTP POST LOGIN
 	}; // End SignIn
 }); // End Controller SignInCtrl
