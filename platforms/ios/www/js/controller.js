@@ -1,4 +1,4 @@
-angular.module('ionicApp.controller',['chart.js'])
+angular.module('ionicApp.controller',['chart.js','ngCordova'])
 
 /****************************************/
 /*
@@ -20,7 +20,6 @@ angular.module('ionicApp.controller',['chart.js'])
 })
 
 .factory('Camera', ['$q', function($q) {
-
   return {
     getPicture: function(options) {
       var q = $q.defer();
@@ -38,7 +37,7 @@ angular.module('ionicApp.controller',['chart.js'])
 }])
 
 .config(function($compileProvider){
-  $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|mailto|file|tel):/);
+  $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|mailto|file|tel):|data:image\//);
 })
 
 
@@ -47,6 +46,621 @@ angular.module('ionicApp.controller',['chart.js'])
  * Manage Controller
  */
 /****************************************/
+/****************************************/
+/** Take_Photo_LandScape_Ctrl **/
+/****************************************/
+.controller('Take_Photo_LandScape_Ctrl', function($scope, $state) {
+	/* Control Navigator for Photos */
+	var typeBrowser = getTypeWebBrowser();
+	if (typeBrowser == "DEVICE") {
+		/* Run on device */
+		
+		$scope.navigator_landscape_north = "landinfo.take_photo_landscape_north_device";
+		$scope.navigator_landscape_east = "landinfo.take_photo_landscape_east_device";
+		$scope.navigator_landscape_south = "landinfo.take_photo_landscape_south_device";
+		$scope.navigator_landscape_west = "landinfo.take_photo_landscape_west_device";
+		
+		if (window.DeviceOrientationEvent) {
+			console.log("DeviceOrientation is supported");
+			  window.addEventListener('deviceorientation', function(eventData) {
+			    // alpha is the compass direction the device is facing in degrees
+			    var dir = eventData.alpha
+			    
+			    if ((dir >= 0 && dir <= 1) || (dir >= 359 && dir <= 360)){
+			    	document.getElementById("aTagNorth").style.visibility = "visible";
+					document.getElementById("aTagEast").style.visibility = "hidden";
+					document.getElementById("aTagSouth").style.visibility = "hidden";
+					document.getElementById("aTagWest").style.visibility = "hidden";
+					seeToast2("NORTH",2000);
+			    } else if (dir >= 179 && dir <= 181){
+			    	document.getElementById("aTagNorth").style.visibility = "hidden";
+					document.getElementById("aTagEast").style.visibility = "hidden";
+					document.getElementById("aTagSouth").style.visibility = "visible";
+					document.getElementById("aTagWest").style.visibility = "hidden";
+					seeToast2("SOUTH",2000);
+			    } else if (dir>= 89 && dir <= 91){
+			    	document.getElementById("aTagNorth").style.visibility = "hidden";
+					document.getElementById("aTagEast").style.visibility = "visible";
+					document.getElementById("aTagSouth").style.visibility = "hidden";
+					document.getElementById("aTagWest").style.visibility = "hidden";
+					seeToast2("EAST",2000);
+			    } else if (dir>= 269 && dir <= 271) {
+			    	document.getElementById("aTagNorth").style.visibility = "hidden";
+					document.getElementById("aTagEast").style.visibility = "hidden";
+					document.getElementById("aTagSouth").style.visibility = "hidden";
+					document.getElementById("aTagWest").style.visibility = "visible";
+					seeToast2("WEST",2000);
+			    } else {
+			    	
+			    } 
+			  }, false);
+		} else {
+			  console.log("Not supported compass");
+		}
+	} else {
+		/* Run on browser */
+		/* Visible all */
+		document.getElementById("aTagNorth").style.visibility = "visible";
+		document.getElementById("aTagEast").style.visibility = "visible";
+		document.getElementById("aTagSouth").style.visibility = "visible";
+		document.getElementById("aTagWest").style.visibility = "visible";
+		
+		$scope.navigator_landscape_north = "landinfo.take_photo_landscape_north_browser";
+		$scope.navigator_landscape_east = "landinfo.take_photo_landscape_east_browser";
+		$scope.navigator_landscape_south = "landinfo.take_photo_landscape_south_browser";
+		$scope.navigator_landscape_west = "landinfo.take_photo_landscape_west_browser";
+	}
+	
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+	$scope.landscape_north_photo_data_url = newPlot.landscape_north_photo_data_url;
+	$scope.landscape_east_photo_data_url = newPlot.landscape_east_photo_data_url;
+	$scope.landscape_south_photo_data_url = newPlot.landscape_south_photo_data_url;
+	$scope.landscape_west_photo_data_url = newPlot.landscape_west_photo_data_url;
+	$scope.goBack = function() {
+		$state.go('landinfo.photos');
+	};
+})
+
+.controller('Take_Photo_LandScape_North_Device_Ctrl', function($scope, $state, $ionicLoading, $http,$cordovaCamera) {
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+    $scope.pictureURL = 'http://placehold.it/300x300';
+	var options = {
+		      quality: 100,
+		      destinationType: Camera.DestinationType.DATA_URL,
+		      sourceType: Camera.PictureSourceType.CAMERA,
+		      allowEdit: false,
+		      encodingType: Camera.EncodingType.JPEG,
+		      targetWidth: 640,
+		      targetHeight: 480,
+		      popoverOptions: CameraPopoverOptions,
+		      saveToPhotoAlbum: false,
+		      correctOrientation:true
+    };
+	var dataURL = "";
+	$scope.takePicture = function() {
+		$cordovaCamera.getPicture(options)
+		.then(function(imageData){
+			$scope.pictureURL = "data:image/jpeg;base64," + imageData;
+			dataURL = $scope.pictureURL;
+		}, function(error) {
+			console.log("Camera error : " + angular.toJson(error));
+		});
+	};
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading LandScape North photo. Please wait...'
+	    });
+    	
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:dataURL, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.landscape_north_photo_data_url = data.trim();
+					newPlot.landscape_north_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.take_photos_landscape');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+	
+	$scope.saveNorthPhoto = function() {
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_landscape_north.jpg"
+		self_upload(image_name,"landscape_north");
+	};
+})
+
+.controller('Take_Photo_LandScape_North_Browser_Ctrl', function($scope, $state, $ionicLoading, $http) {
+	var typeBrowser = getTypeWebBrowser();
+	if (typeBrowser != "FIREFOX"){
+		alert("Take picture by Camera now only works well for FireFox Web Browser ! You are using " + typeBrowser + ", that may not work");
+	}
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var video = document.getElementById("video");
+
+	var videoObj = { "video": true };
+	var errBack = function(error) {
+		console.log("Video capture error: ", error.code); 
+	};
+
+	if(navigator.getUserMedia) { // Standard
+		navigator.getUserMedia(videoObj, function(stream) {
+			video.src = stream;
+			video.play();
+		}, errBack);
+	} else if(navigator.webkitGetUserMedia) { // WebKit-prefixed
+		navigator.webkitGetUserMedia(videoObj, function(stream){
+			video.src = window.webkitURL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	} else if(navigator.mozGetUserMedia) { // Firefox-prefixed
+		navigator.mozGetUserMedia(videoObj, function(stream){
+			video.src = window.URL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	}
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading LandScape North photo. Please wait...'
+	    });
+    	context.drawImage(video, 0, 0, 640, 480);
+    	var dataURL = canvas.toDataURL('image/jpeg', 1);
+    	var imageData = dataURL;
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:imageData, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.landscape_north_photo_data_url = data.trim();
+					newPlot.landscape_north_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.take_photos_landscape');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+    
+	// Trigger photo take
+	document.getElementById("snap").addEventListener("click", function() {
+		context.drawImage(video, 0, 0, 640, 480);
+		/* Upload data to google drive */
+		//auth();
+		/* Upload data to our server */
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_landscape_north.jpg"
+		self_upload(image_name,"landscape_north");
+	});
+})
+
+.controller('Take_Photo_LandScape_East_Device_Ctrl', function($scope, $state, $ionicLoading, $http,$cordovaCamera) {
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+    $scope.pictureURL = 'http://placehold.it/300x300';
+	var options = {
+		      quality: 100,
+		      destinationType: Camera.DestinationType.DATA_URL,
+		      sourceType: Camera.PictureSourceType.CAMERA,
+		      allowEdit: false,
+		      encodingType: Camera.EncodingType.JPEG,
+		      targetWidth: 640,
+		      targetHeight: 480,
+		      popoverOptions: CameraPopoverOptions,
+		      saveToPhotoAlbum: false,
+		      correctOrientation:true
+    };
+	var dataURL = "";
+	$scope.takePicture = function() {
+		$cordovaCamera.getPicture(options)
+		.then(function(imageData){
+			$scope.pictureURL = "data:image/jpeg;base64," + imageData;
+			dataURL = $scope.pictureURL;
+		}, function(error) {
+			console.log("Camera error : " + angular.toJson(error));
+		});
+	};
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading LandScape East photo. Please wait...'
+	    });
+    	
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:dataURL, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.landscape_east_photo_data_url = data.trim();
+					newPlot.landscape_east_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.take_photos_landscape');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+	
+	$scope.saveEastPhoto = function() {
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_landscape_east.jpg"
+		self_upload(image_name,"landscape_east");
+	};
+})
+
+
+.controller('Take_Photo_LandScape_East_Browser_Ctrl', function($scope, $state, $ionicLoading, $http) {
+	var typeBrowser = getTypeWebBrowser();
+	if (typeBrowser != "FIREFOX"){
+		alert("Take picture by Camera now only works well for FireFox Web Browser ! You are using " + typeBrowser + ", that may not work");
+	}
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var video = document.getElementById("video");
+
+	var videoObj = { "video": true };
+	var errBack = function(error) {
+		console.log("Video capture error: ", error.code); 
+	};
+
+	if(navigator.getUserMedia) { // Standard
+		navigator.getUserMedia(videoObj, function(stream) {
+			video.src = stream;
+			video.play();
+		}, errBack);
+	} else if(navigator.webkitGetUserMedia) { // WebKit-prefixed
+		navigator.webkitGetUserMedia(videoObj, function(stream){
+			video.src = window.webkitURL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	} else if(navigator.mozGetUserMedia) { // Firefox-prefixed
+		navigator.mozGetUserMedia(videoObj, function(stream){
+			video.src = window.URL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	}
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading LandScape East photo. Please wait...'
+	    });
+    	context.drawImage(video, 0, 0, 640, 480);
+    	var dataURL = canvas.toDataURL('image/jpeg', 1);
+    	var imageData = dataURL;
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:imageData, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.landscape_east_photo_data_url = data.trim();
+					newPlot.landscape_east_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.take_photos_landscape');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+    
+	// Trigger photo take
+	document.getElementById("snap").addEventListener("click", function() {
+		context.drawImage(video, 0, 0, 640, 480);
+		/* Upload data to google drive */
+		//auth();
+		/* Upload data to our server */
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_landscape_east.jpg"
+		self_upload(image_name,"landscape_east");
+	});
+})
+
+.controller('Take_Photo_LandScape_South_Device_Ctrl', function($scope, $state, $ionicLoading, $http,$cordovaCamera) {
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+    $scope.pictureURL = 'http://placehold.it/300x300';
+	var options = {
+		      quality: 100,
+		      destinationType: Camera.DestinationType.DATA_URL,
+		      sourceType: Camera.PictureSourceType.CAMERA,
+		      allowEdit: false,
+		      encodingType: Camera.EncodingType.JPEG,
+		      targetWidth: 640,
+		      targetHeight: 480,
+		      popoverOptions: CameraPopoverOptions,
+		      saveToPhotoAlbum: false,
+		      correctOrientation:true
+    };
+	var dataURL = "";
+	$scope.takePicture = function() {
+		$cordovaCamera.getPicture(options)
+		.then(function(imageData){
+			$scope.pictureURL = "data:image/jpeg;base64," + imageData;
+			dataURL = $scope.pictureURL;
+		}, function(error) {
+			console.log("Camera error : " + angular.toJson(error));
+		});
+	};
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading LandScape South photo. Please wait...'
+	    });
+    	
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:dataURL, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.landscape_south_photo_data_url = data.trim();
+					newPlot.landscape_south_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.take_photos_landscape');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+	
+	$scope.saveSouthPhoto = function() {
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_landscape_south.jpg"
+		self_upload(image_name,"landscape_south");
+	};
+})
+
+.controller('Take_Photo_LandScape_South_Browser_Ctrl', function($scope, $state, $ionicLoading, $http) {
+	var typeBrowser = getTypeWebBrowser();
+	if (typeBrowser != "FIREFOX"){
+		alert("Take picture by Camera now only works well for FireFox Web Browser ! You are using " + typeBrowser + ", that may not work");
+	}
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var video = document.getElementById("video");
+
+	var videoObj = { "video": true };
+	var errBack = function(error) {
+		console.log("Video capture error: ", error.code); 
+	};
+
+	if(navigator.getUserMedia) { // Standard
+		navigator.getUserMedia(videoObj, function(stream) {
+			video.src = stream;
+			video.play();
+		}, errBack);
+	} else if(navigator.webkitGetUserMedia) { // WebKit-prefixed
+		navigator.webkitGetUserMedia(videoObj, function(stream){
+			video.src = window.webkitURL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	} else if(navigator.mozGetUserMedia) { // Firefox-prefixed
+		navigator.mozGetUserMedia(videoObj, function(stream){
+			video.src = window.URL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	}
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading LandScape South photo. Please wait...'
+	    });
+    	context.drawImage(video, 0, 0, 640, 480);
+    	var dataURL = canvas.toDataURL('image/jpeg', 1);
+    	var imageData = dataURL;
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:imageData, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.landscape_south_photo_data_url = data.trim();
+					newPlot.landscape_south_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.take_photos_landscape');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+    
+	// Trigger photo take
+	document.getElementById("snap").addEventListener("click", function() {
+		//context.drawImage(video, 0, 0, 640, 480);
+		/* Upload data to google drive */
+		//auth();
+		/* Upload data to our server */
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_landscape_south.jpg"
+		self_upload(image_name,"landscape_south");
+	});
+})
+
+.controller('Take_Photo_LandScape_West_Device_Ctrl', function($scope, $state, $ionicLoading, $http,$cordovaCamera) {
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+    $scope.pictureURL = 'http://placehold.it/300x300';
+	var options = {
+		      quality: 100,
+		      destinationType: Camera.DestinationType.DATA_URL,
+		      sourceType: Camera.PictureSourceType.CAMERA,
+		      allowEdit: false,
+		      encodingType: Camera.EncodingType.JPEG,
+		      targetWidth: 640,
+		      targetHeight: 480,
+		      popoverOptions: CameraPopoverOptions,
+		      saveToPhotoAlbum: false,
+		      correctOrientation:true
+    };
+	var dataURL = "";
+	$scope.takePicture = function() {
+		$cordovaCamera.getPicture(options)
+		.then(function(imageData){
+			$scope.pictureURL = "data:image/jpeg;base64," + imageData;
+			dataURL = $scope.pictureURL;
+		}, function(error) {
+			console.log("Camera error : " + angular.toJson(error));
+		});
+	};
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading LandScape West photo. Please wait...'
+	    });
+    	
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:dataURL, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.landscape_west_photo_data_url = data.trim();
+					newPlot.landscape_west_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.take_photos_landscape');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+	
+	$scope.saveWestPhoto = function() {
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_landscape_west.jpg"
+		self_upload(image_name,"landscape_west");
+	};
+})
+
+.controller('Take_Photo_LandScape_West_Browser_Ctrl', function($scope, $state, $ionicLoading, $http) {
+	var typeBrowser = getTypeWebBrowser();
+	if (typeBrowser != "FIREFOX"){
+		alert("Take picture by Camera now only works well for FireFox Web Browser ! You are using " + typeBrowser + ", that may not work");
+	}
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var video = document.getElementById("video");
+
+	var videoObj = { "video": true };
+	var errBack = function(error) {
+		console.log("Video capture error: ", error.code); 
+	};
+
+	if(navigator.getUserMedia) { // Standard
+		navigator.getUserMedia(videoObj, function(stream) {
+			video.src = stream;
+			video.play();
+		}, errBack);
+	} else if(navigator.webkitGetUserMedia) { // WebKit-prefixed
+		navigator.webkitGetUserMedia(videoObj, function(stream){
+			video.src = window.webkitURL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	} else if(navigator.mozGetUserMedia) { // Firefox-prefixed
+		navigator.mozGetUserMedia(videoObj, function(stream){
+			video.src = window.URL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	}
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading LandScape West photo. Please wait...'
+	    });
+    	context.drawImage(video, 0, 0, 640, 480);
+    	var dataURL = canvas.toDataURL('image/jpeg', 1);
+    	var imageData = dataURL;
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:imageData, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.landscape_west_photo_data_url = data.trim();
+					newPlot.landscape_west_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.take_photos_landscape');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+    
+	// Trigger photo take
+	document.getElementById("snap").addEventListener("click", function() {
+		//context.drawImage(video, 0, 0, 640, 480);
+		/* Upload data to google drive */
+		//auth();
+		/* Upload data to our server */
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_landscape_west.jpg"
+		self_upload(image_name,"landscape_west");
+	});
+})
 /****************************************/
 /** List Account Controller **/
 /****************************************/
@@ -72,15 +686,47 @@ angular.module('ionicApp.controller',['chart.js'])
 /** Settings Controller **/
 /****************************************/
 .controller('SettingsCtrl', function($scope, $state, $http, Scopes,$ionicHistory) {
-	console.log("Click Setting");
 	$ionicHistory.clearCache();
+	$scope.landinfo_logout = function() {
+		var objAuth = window.localStorage.getItem("AUTHENTICATION_LIST");
+		var email = window.localStorage.getItem("current_email"); 
+		if (!isEmpty(objAuth) && !isEmpty(email)){
+			var listAuthentication = JSON.parse(objAuth);
+			if (checkExist(email, listAuthentication['authentication']) == true){
+				var confirm_sign_out = confirm("Do you want to sign out account " + email + "? Account " + email + " and its data will be removed out of your device");
+				if (confirm_sign_out == true){
+					for (var index = 0; index < listAuthentication['authentication'].length; index++) {
+					    var account = listAuthentication['authentication'][index];
+					    if(account.email == email){
+					       if (index > - 1){
+					    	   //console.log("Remove")
+					    	   listAuthentication['authentication'].splice(index, 1);
+					    	   window.localStorage.setItem("AUTHENTICATION_LIST",JSON.stringify(listAuthentication));
+					       } 
+					    } 
+					}
+					$state.go('landinfo.accounts');
+				} 
+			} else {
+				alert("Account " + email + " is sign out already !");
+			}	
+		} else {
+			alert("Account is sign out already !");
+		}
+	};
 }) // End Setting
 
 /****************************************/
 /** Results Section Controller **/
 /****************************************/
 .controller('Results_Section_Ctrl', function($scope, $state, Scopes) {
+//	var email = window.localStorage.getItem("current_email"); 
+//	if (isEmpty(email)){
+//		$state.go('landinfo.login');
+//	}
+	
 	$scope.goBack = function() {
+		 window.localStorage.setItem("PREVIOUS_PAGE","RESULT_SECTION_PAGE");
          $state.go('landinfo.plots');
     };
     var view_plot = JSON.parse(window.localStorage.getItem("current_view_plot"));
@@ -94,9 +740,9 @@ angular.module('ionicApp.controller',['chart.js'])
     
 	$scope.plot_name = finalstr;
 	console.log("Result Section Ctrl");
-	$scope.review_status_img_src = "img/check-mark-th.png";
+	$scope.review_status_img_src = "img/lpks_green_checkmark.png";
 	//$scope.review_status_img_src = "img/check-mark-white-th.png";	
-	$scope.results_status_img_src = "img/check-mark-th.png";
+	$scope.results_status_img_src = "img/lpks_green_checkmark.png";
 }) // End Results Section Controller
 
 /****************************************/
@@ -116,24 +762,18 @@ angular.module('ionicApp.controller',['chart.js'])
 	
 	function fAvgLat(JSONArrayPlots){
 		var sumLat = 0;
-		//var sumLong = 0;
 		for (var index = 0; index < JSONArrayPlots.length; index++) {
 			var latitude =  parseFloat(JSONArrayPlots[index].latitude);
-			//var longitude =  parseFloat(JSONArray[index].longitude);
 			sumLat = sumLat + latitude;
-			//sumLong = sumLong + longitude;
 		}
 		
 		return parseFloat(sumLat / JSONArrayPlots.length);
 	};
 	
 	function fAvgLong(JSONArrayPlots){
-		//var sumLat = 0;
 		var sumLong = 0;
 		for (var index = 0; index < JSONArrayPlots.length; index++) {
-			//var latitude =  parseFloat(JSONArrayPlots[index].latitude);
 			var longitude =  parseFloat(JSONArrayPlots[index].longitude);
-			//sumLat = sumLat + latitude;
 			sumLong = sumLong + longitude;
 		}
 		
@@ -318,33 +958,208 @@ angular.module('ionicApp.controller',['chart.js'])
 /** ReviewSelectedPlot Controller **/
 /****************************************/
 .controller('ReviewSelectedPlotCtrl', function($scope, $state, $http, Scopes) {
-
+	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
 	$scope.goBack = function() {
          $state.go('landinfo.results-section');
     };
 	var ListPlotsCtrl_Scope = Scopes.get('ListPlotsCtrl_Scope');
-	
 	$scope.name = ListPlotsCtrl_Scope.selectedPlot.name;
+	$scope.selectedPlot = ListPlotsCtrl_Scope.selectedPlot;
+	
+	//console.log($scope.selectedPlot);
 	
 	var mix_name = $scope.name; 
 	var str = mix_name.length;
-	var email = window.localStorage.getItem('current_email');
 	var emaillength = email.length + 1;
 	var finalstr = mix_name.substring(emaillength,str);
 	$scope.plot_name = finalstr;
+	
+	var slopeshape_down_data = "";
+	var slopeshape_cross_data = "";
+	
+	if (!isEmpty($scope.selectedPlot.slope_shape)){
+		list_slope_shape = getListComponents($scope.selectedPlot.slope_shape.trim(),",");
+		if (!isEmpty(list_slope_shape[0].toUpperCase().trim())){
+			slopeshape_down_data = list_slope_shape[0].toUpperCase().trim();
+		}
+		if (!isEmpty(list_slope_shape[1].toUpperCase().trim())){
+			slopeshape_cross_data = list_slope_shape[1].toUpperCase().trim();
+		}
+	} else {
+		slopeshape_down_data = "";
+		slopeshape_cross_data = "";
+	}
+	
+	$scope.selectedPlot.slopeshape_down_data = slopeshape_down_data;
+	$scope.selectedPlot.slopeshape_cross_data = slopeshape_cross_data;
+	
+	/* Process Images for Review Page */
+	var current_plot = ListPlotsCtrl_Scope.selectedPlot;
+	$scope.landcover_selected_plot ="";
+	var land_cover_text = current_plot.land_cover.toUpperCase().trim();
+	if (isEmpty(current_plot.land_cover)){
+		$scope.landcover_selected_plot = "media/landcover_images/ic_unknown.png";
+	} else {
+		if (land_cover_text == "TREE"){
+			$scope.landcover_selected_plot = "media/landcover_images/ic_tree.png";
+		} else if (land_cover_text == "SHRUBLAND") {
+			$scope.landcover_selected_plot = "media/landcover_images/ic_shrub.png";
+		} else if (land_cover_text == "GRASSLAND") {
+			$scope.landcover_selected_plot = "media/landcover_images/ic_grass_land.png"; 
+		} else if (land_cover_text == "SAVANNA") {
+			$scope.landcover_selected_plot = "media/landcover_images/ic_savanna.png";
+		} else if (land_cover_text == "GARDEN/MIXED") {
+			$scope.landcover_selected_plot = "media/landcover_images/ic_garden_mixed.png";
+		} else if (land_cover_text == "CROPLAND") {
+			$scope.landcover_selected_plot = "media/landcover_images/ic_cropland.png";
+		} else if (land_cover_text == "DEVELOPED") {
+			$scope.landcover_selected_plot = "media/landcover_images/ic_developed.png"; 
+		} else if (land_cover_text == "BARREN") {
+			$scope.landcover_selected_plot = "media/landcover_images/ic_barren.png";
+		} else if (land_cover_text == "WATER") {
+			$scope.landcover_selected_plot = "media/landcover_images/ic_water.png";
+		} else {
+			$scope.landcover_selected_plot = "media/landcover_images/ic_unknown.png";
+		}
+		
+	}
+	
+	$scope.flooding_selected_plot ="";
+	var flooding_text = current_plot.flooding.toUpperCase().trim();
+	if (flooding_text == "TRUE"){
+		$scope.flooding_selected_plot = "media/landcover_images/ic_flooded.png";
+	} else if (flooding_text == "FALSE") {
+		$scope.flooding_selected_plot = "media/landcover_images/ic_not_flooded.png";
+	} else {
+		$scope.flooding_selected_plot = "media/landcover_images/ic_unknown.png";
+	} 
+	
+	
+	$scope.grazed_selected_plot ="";
+	var grazed_text = current_plot.grazed.toUpperCase().trim();
+	if (grazed_text == "TRUE"){
+		$scope.grazed_selected_plot = "media/landuse_images/ic_grazed.png";
+	} else if (grazed_text == "FALSE") {
+		$scope.grazed_selected_plot = "media/landuse_images/ic_not_grazed.png";
+	} else {
+		$scope.grazed_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	 
+	$scope.slope_selected_plot ="";
+	var slope_text = current_plot.slope.toUpperCase().trim();
+	if (slope_text == "FLAT (0-2%)"){
+		$scope.slope_selected_plot = "media/slope_images/ic_slope_flat.png";
+	} else if (slope_text == "GENTLE (3-5%)") {
+		$scope.slope_selected_plot = "media/slope_images/ic_slope_gentle.png";
+	} else if (slope_text == "MODERATE (6-10%)"){
+		$scope.slope_selected_plot = "media/slope_images/ic_slope_moderate.png";
+	} else if (slope_text == "ROLLING (11-15%)") {
+		$scope.slope_selected_plot = "media/slope_images/ic_slope_rolling.png";
+	} else if (slope_text == "HILLY (16-30%)") {
+		$scope.slope_selected_plot = "media/slope_images/ic_slope_hilly.png";
+	} else if (slope_text == "STEEP (31-60%)") {
+		$scope.slope_selected_plot= "media/slope_images/ic_slope_steep.png";
+	} else if (slope_text == "VERYSTEEP (60-100%)") {
+		$scope.slope_selected_plot= "media/slope_images/ic_slope_very_steep.png";
+	} else {
+		$scope.slope_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+
+	
+	$scope.down_slopeshapre_selected_plot ="";
+	var down_slopeshapre_text = slopeshape_down_data.toUpperCase().trim();
+	if (down_slopeshapre_text == "CONVEX"){
+		$scope.down_slopeshapre_selected_plot = "media/slopeshape_images/ic_downslopeconvex.png";
+	} else if (down_slopeshapre_text == "CONCAVE") {
+		$scope.down_slopeshapre_selected_plot = "media/slopeshape_images/ic_downslopeconcave.png";
+	} else if (down_slopeshapre_text == "FLAT" || down_slopeshapre_text == "LINEAR") {
+		$scope.down_slopeshapre_selected_plot = "media/slopeshape_images/ic_downslopeflat.png";
+	} else {
+		$scope.down_slopeshapre_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	
+	$scope.cross_slopeshapre_selected_plot ="";
+	var cross_slopeshapre_text = slopeshape_cross_data.toUpperCase().trim();
+	if (cross_slopeshapre_text == "CONVEX"){
+		$scope.cross_slopeshapre_selected_plot = "media/slopeshape_images/ic_crossslopeconvex.png";
+	} else if (cross_slopeshapre_text == "CONCAVE") {
+		$scope.cross_slopeshapre_selected_plot = "media/slopeshape_images/ic_crossslopeconcave.png";
+	} else if (cross_slopeshapre_text == "FLAT" || cross_slopeshapre_text == "LINEAR") {
+		$scope.cross_slopeshapre_selected_plot = "media/slopeshape_images/ic_crossslopeflat.png";
+	} else {
+		$scope.cross_slopeshapre_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	
+	$scope.surface_cracked_selected_plot ="";
+	var surface_cracked_text = current_plot.surface_cracking.toUpperCase().trim();
+	if (surface_cracked_text == "TRUE"){
+		$scope.surface_cracked_selected_plot = "media/soilcondition_images/ic_soil_cracks.png";
+	} else if (surface_cracked_text == "FALSE") {
+		$scope.surface_cracked_selected_plot = "media/soilcondition_images/ic_no_soil_cracks.png";
+	} else {
+		$scope.surface_cracked_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	
+	$scope.surface_salt_selected_plot ="";
+	var surface_salt_text = current_plot.surface_salt.toUpperCase().trim();
+	if (surface_salt_text == "TRUE"){
+		$scope.surface_salt_selected_plot = "media/soilcondition_images/ic_surface_salt.png";
+	} else if (surface_salt_text == "FALSE") {
+		$scope.surface_salt_selected_plot = "media/soilcondition_images/ic_no_surface_salt.png";
+	} else {
+		$scope.surface_salt_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	
+	/* End Procress images */
 	
 	$scope.precip_bar_options = {
   	      animation: false
     };
   
+	$scope.precip_bar_colors = [{fillColor:["#0000FF"]}];
 	
 	$scope.selectedPlot = ListPlotsCtrl_Scope.selectedPlot;
     $scope.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul','Aug','Sep','Oct','Nov','Dec'];
     $scope.series = ['Series A'];
     $scope.captions = ['Climate'];
 
+    /* Validate climate precipitation */
+    if (isEmpty(ListPlotsCtrl_Scope.selectedPlot.climate) || isEmpty(ListPlotsCtrl_Scope.selectedPlot.climate.precipitation)){
+    	//console.log("Dech co gi");
+    	ListPlotsCtrl_Scope.selectedPlot.climate = {};
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation = {};
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.january = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.february = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.march = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.april = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.may = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.june = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.july = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.august = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.september = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.october = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.november = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.december = -999;
+    }
+    
+    
     $scope.data = [
-       [ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.january, ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.february, ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.march, ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.april, ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.may, ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.june, ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.july, ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.august,ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.september,ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.october,ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.november,ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.december],
+       [ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.january, 
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.february, 
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.march, 
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.april, 
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.may, 
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.june, 
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.july, 
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.august,
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.september,
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.october,
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.november,
+        ListPlotsCtrl_Scope.selectedPlot.climate.precipitation.december
+       ],
     ];
 
     $scope.temp_line_options = {
@@ -352,6 +1167,62 @@ angular.module('ionicApp.controller',['chart.js'])
     };
     $scope.names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul','Aug','Sep','Oct','Nov','Dec'];
     $scope.number = ['Max Temp', 'Avg Temp','Min Temp'];
+    
+    
+    /* Validate climate precipitation */
+    if (isEmpty(ListPlotsCtrl_Scope.selectedPlot.climate) || isEmpty(ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature)){
+    	//console.log("Dech co gi");
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature = {};
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.january = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.february = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.march = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.april = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.may = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.june = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.july = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.august = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.september = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.october = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.november = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.december = -999;
+    }
+    
+    /* Validate climate precipitation */
+    if (isEmpty(ListPlotsCtrl_Scope.selectedPlot.climate) || isEmpty(ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature)){
+    	//console.log("Dech co gi");
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature = {};
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.january = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.february = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.march = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.april = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.may = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.june = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.july = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.august = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.september = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.october = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.november = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.december = -999;
+    }
+    
+    /* Validate climate precipitation */
+    if (isEmpty(ListPlotsCtrl_Scope.selectedPlot.climate) || isEmpty(ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature)){
+    	//console.log("Dech co gi");
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature = {};
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.january = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.february = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.march = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.april = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.may = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.june = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.july = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.august = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.september = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.october = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.november = -999;
+    	ListPlotsCtrl_Scope.selectedPlot.climate.min_temperature.december = -999;
+    }
+    
     $scope.linedata = [
           [ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.january, ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.february, ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.march, ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.april, ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.may, ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.june, ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.july, ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.august,ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.september,ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.october,ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.november,ListPlotsCtrl_Scope.selectedPlot.climate.max_temperature.december]
          ,[ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.january, ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.february, ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.march, ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.april, ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.may, ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.june, ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.july, ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.august,ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.september,ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.october,ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.november,ListPlotsCtrl_Scope.selectedPlot.climate.average_temperature.december]
@@ -360,27 +1231,83 @@ angular.module('ionicApp.controller',['chart.js'])
     $scope.onClick = function (points, evt) {
         console.log(points, evt);
     };
-  	
-	//var str = ListPlotsCtrl_Scope.selectedPlot.name.length;
-	//var email = window.localStorage.getItem('current_email');
-	//var emaillength = email.length + 1;
-	//var finalstr = name.substring(emaillength,str);
-		
-	$scope.names1 = [finalstr];
+	
     $scope.awcseries = ['Series A'];
     $scope.awccaptions = ['AWC Soil Profile'];
 
+    /* Validate climate precipitation */
+    if (isEmpty(ListPlotsCtrl_Scope.selectedPlot.analytic_data_soil) || isEmpty(ListPlotsCtrl_Scope.selectedPlot.analytic_data_soil.awc_soil_profile_awc)){
+    	ListPlotsCtrl_Scope.selectedPlot.analytic_data_soil = {};
+    	ListPlotsCtrl_Scope.selectedPlot.analytic_data_soil.awc_soil_profile_awc = 0;
+
+    }
+ 
+    /* Get List of AWC Soil Profile from List of Plots */
+    var awc_data_array = [ListPlotsCtrl_Scope.selectedPlot.analytic_data_soil.awc_soil_profile_awc];
+	var awc_names_array = [finalstr];
+    /* Display AWC Soil Profile data depend of number of selection */
+	$scope.names1 = awc_names_array;
+	var recorder_name = window.localStorage.getItem('current_email');
+	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
     $scope.awcdata = [
-       [ListPlotsCtrl_Scope.selectedPlot.analytic_data_soil.awc_soil_profile_awc],
+       awc_data_array,
     ];
 
     $scope.awc_bar_options = {
   	      animation: false
     };
     
+    var number = 0;
+    for(var index = 0 ; index < LIST_PLOTS.length ; index++){
+    	var plot = LIST_PLOTS[index];
+    	if (isPlotInCloud(plot) == true){
+    		number++;
+    	}
+    }
+    
+    $scope.awc_bar_colors = [{fillColor:["#000066"]}];
+    
+    $scope.max_awc_plots = number;
+    if (document.getElementById("txtMaxNumberOfAWC") != null){
+       document.getElementById("txtMaxNumberOfAWC").innerHTML = number;
+    }
+    
+    $scope.changeNumberOfAWCPlots = function(){
+    	var awc_data_array = [ListPlotsCtrl_Scope.selectedPlot.analytic_data_soil.awc_soil_profile_awc];
+    	var awc_names_array = [finalstr];
+    	
+    	$scope.names1 = awc_names_array;
+    	
+        $scope.awcdata = [
+           awc_data_array,
+        ];
+    	var numberOfAWCPlots = document.getElementById("numberOfAWCPlots").value;
+    	document.getElementById("txtNumberOfAWCPlots").innerHTML = numberOfAWCPlots;
+    	if (numberOfAWCPlots > 1){
+    		var count = 1;
+    		for(var index=0 ; index < LIST_PLOTS.length ; index++){
+    			var plot = LIST_PLOTS[index];
+    			var real_name = getRealPlotName(recorder_name,plot.name);
+    			if (count < numberOfAWCPlots && real_name != finalstr && !isEmpty(real_name) && !isEmpty(plot.analytic_data_soil) &&!isEmpty(plot.analytic_data_soil.awc_soil_profile_awc)){
+    			   awc_names_array.push(real_name);
+    			   awc_data_array.push(plot.analytic_data_soil.awc_soil_profile_awc);
+    			   count = count + 1;
+    			}
+    			
+    		}
+    		$scope.names1 = awc_names_array;
+    	    $scope.awcdata = [
+    	       awc_data_array,
+    	    ];
+    	}
+    	
+    };
+    
+    
+    
+    
     $scope.plotname = function(name){
 		var str = name.length;
-		//var email = document.getElementById("email").value;
 		var email = window.localStorage.getItem('current_email');
 		var emaillength = email.length + 1;
 		var finalstr = name.substring(emaillength,str);
@@ -388,8 +1315,8 @@ angular.module('ionicApp.controller',['chart.js'])
 		return finalstr;
 	};
 	
-	$scope.review_status_img_src = "img/check-mark-th.png";
-	$scope.results_status_img_src = "img/check-mark-th.png";
+	$scope.review_status_img_src = "img/lpks_green_checkmark.png";
+	$scope.results_status_img_src = "img/lpks_green_checkmark.png";
 
 }) // End ReviewSelectedPlotCtrl
 
@@ -399,6 +1326,7 @@ angular.module('ionicApp.controller',['chart.js'])
 .controller('QuickClimateCtrl', function($scope,$state,$http,$ionicLoading) {
 	
 	$scope.goBack = function() {
+		window.localStorage.setItem("PREVIOUS_PAGE","QUICK_CLIMATE_PAGE");
         $state.go('landinfo.plots');
     };
 	
@@ -447,14 +1375,17 @@ angular.module('ionicApp.controller',['chart.js'])
 			   $scope.temp_line_options = {
 			    	      animation: false
 			   };
+			   //$scope.temp_line_colors = [{strokeColor:["#FF0000","#FF00FF","#0000FF"]}];
 			   
 			   $scope.precip_bar_options = {
 			    	      animation: false
 			   };
 			 
+			   $scope.precip_bar_colors = [{fillColor:["#0000FF"]}];
+			   
 			   $ionicLoading.hide();
 			   $scope.onClick = function (points, evt) {
-			    console.log(points, evt);
+			      console.log(points, evt);
 			   };
             }).error(function(err) {
             	$ionicLoading.hide();
@@ -487,63 +1418,65 @@ angular.module('ionicApp.controller',['chart.js'])
 	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
 	$scope.plot_name = newPlot.real_name;
 	
 	
-	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
 	if (newPlot.isPlotIDCompleted == true){
-		$scope.plot_id_img_src = "img/check-mark-th.png";
+		$scope.plot_id_img_src = "img/lpks_green_checkmark.png";
 	} else {
-		$scope.plot_id_img_src = "img/check-mark-white-th.png";	
+		$scope.plot_id_img_src = "img/lpks_empty_checkmark.png";	
 	}
 	
 	if (newPlot.isLandCoverCompleted == true){
-		$scope.plot_landcover_img_src = "img/check-mark-th.png";
+		$scope.plot_landcover_img_src = "img/lpks_green_checkmark.png";
 	} else {
-		$scope.plot_landcover_img_src = "img/check-mark-white-th.png";	
+		$scope.plot_landcover_img_src = "img/lpks_empty_checkmark.png";	
 	}
 	
 	if (newPlot.isLandUseCompleted == true){
-		$scope.plot_landuse_img_src = "img/check-mark-th.png";
+		$scope.plot_landuse_img_src = "img/lpks_green_checkmark.png";
 	} else {
-		$scope.plot_landuse_img_src = "img/check-mark-white-th.png";	
+		$scope.plot_landuse_img_src = "img/lpks_empty_checkmark.png";	
 	}
 	
 	if (newPlot.isSlopeCompleted == true){
-		$scope.plot_slope_img_src = "img/check-mark-th.png";
+		$scope.plot_slope_img_src = "img/lpks_green_checkmark.png";
 	} else {
-		$scope.plot_slope_img_src = "img/check-mark-white-th.png";	
+		$scope.plot_slope_img_src = "img/lpks_empty_checkmark.png";	
 	}
 	
 	if (newPlot.isSlopeShapeCompleted == true){
-		$scope.plot_slopeshape_img_src = "img/check-mark-th.png";
+		$scope.plot_slopeshape_img_src = "img/lpks_green_checkmark.png";
 	} else {
-		$scope.plot_slopeshape_img_src = "img/check-mark-white-th.png";	
+		$scope.plot_slopeshape_img_src = "img/lpks_empty_checkmark.png";	
 	}
 	
 	if (newPlot.isSoilConditionCompleted == true){
-		$scope.plot_soilcondition_img_src = "img/check-mark-th.png";
+		$scope.plot_soilcondition_img_src = "img/lpks_green_checkmark.png";
 	} else {
-		$scope.plot_soilcondition_img_src = "img/check-mark-white-th.png";	
+		$scope.plot_soilcondition_img_src = "img/lpks_empty_checkmark.png";	
 	}
 	
 	if (newPlot.isSoilLayersCompleted == true){
-		$scope.plot_soillayers_img_src = "img/check-mark-th.png";
+		$scope.plot_soillayers_img_src = "img/lpks_green_checkmark.png";
 	} else {
-		$scope.plot_soillayers_img_src = "img/check-mark-white-th.png";	
+		$scope.plot_soillayers_img_src = "img/lpks_empty_checkmark.png";	
 	}
 	
 	if (newPlot.isPhotosCompleted == true){
-		$scope.plot_photos_img_src = "img/check-mark-th.png";
+		$scope.plot_photos_img_src = "img/lpks_green_checkmark.png";
 	} else {
-		$scope.plot_photos_img_src = "img/check-mark-white-th.png";	
+		$scope.plot_photos_img_src = "img/lpks_empty_checkmark.png";	
 	}
 	
 	if (newPlot.isReviewCompleted == true){
-		$scope.plot_review_img_src = "img/check-mark-th.png";
+		$scope.plot_review_img_src = "img/lpks_green_checkmark.png";
 	} else {
-		$scope.plot_review_img_src = "img/check-mark-white-th.png";	
+		$scope.plot_review_img_src = "img/lpks_empty_checkmark.png";	
 	}
 	
 	$scope.gotoAddPlot_Edit_PlotID = function(){
@@ -552,6 +1485,7 @@ angular.module('ionicApp.controller',['chart.js'])
 	},
 	
 	$scope.myGoBack = function() {
+		 window.localStorage.setItem("PREVIOUS_PAGE","ADD_PLOT_GO_BACK");
          $state.go('landinfo.plots');
     };
     
@@ -561,6 +1495,7 @@ angular.module('ionicApp.controller',['chart.js'])
     		 var resultDeleted = deleteLandInfoPlotInArrayt(newPlot.real_name,newPlot.recorder_name,LIST_PLOTS);
     		 if (resultDeleted == true){
     		    window.localStorage.setItem(email + "_" + "LIST_LANDINFO_PLOTS", JSON.stringify(LIST_PLOTS));
+    		    window.localStorage.setItem("PREVIOUS_PAGE","ADD_PLOT_DELETE_EDITION_PLOT_SUCCESS");
     		    $state.go('landinfo.plots');
     		 } else {
     			alert("Error in delete editing plot");
@@ -581,6 +1516,10 @@ angular.module('ionicApp.controller',['chart.js'])
 /** AddPlot_AddNew_Ctrl **/
 /****************************************/
 .controller('AddPlot_AddNew_Ctrl',function($scope,$ionicHistory,$state){
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
 	window.localStorage.setItem("PREVIOUS_PAGE","ADD_PLOT_ADD_NEW");
 
 	$scope.goBack = function() {
@@ -594,6 +1533,10 @@ angular.module('ionicApp.controller',['chart.js'])
 /***************************************/
 .controller('Accelerometer_Ctrl',function($scope,$state,$ionicHistory)
 {	
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
 	$scope.sight_line = "media/accelerometer_images/transparent.sight_line.9.png"; 
 	$scope.btn_click_src = "media/accelerometer_images/big_red_button.png"; 
     var lock = false;
@@ -668,6 +1611,12 @@ angular.module('ionicApp.controller',['chart.js'])
 /***************************************/
 .controller('AddPlot_Slope_Ctrl',function($scope,$state)
 {
+	
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
 	function updatePlotExist(name,recorder_name,JSONArray,newPlot){
 		for (var index = 0; index < JSONArray.length; index++) {
 		    var plot = JSONArray[index];
@@ -779,7 +1728,7 @@ angular.module('ionicApp.controller',['chart.js'])
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
 	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
 	
-	console.log(newPlot);
+	//console.log(newPlot);
 	var Slope_part1_data = "";
 
 	
@@ -806,17 +1755,16 @@ angular.module('ionicApp.controller',['chart.js'])
 	} 
 	
 	$scope.completeAddPlot_Slope = function(){
-		if (Slope_part1_data == null || Slope_part1_data == 'null' || Slope_part1_data == 'undefined' || Slope_part1_data == ''){
-			//newPlot.land_cover = "";
-		} else {
+		if (!isEmpty(Slope_part1_data)){
 			newPlot.slope = Slope_part1_data;		
 			newPlot.isSlopeDoing = true;
 		}
-		
 		if (!isEmptry(newPlot.slope)){
 			newPlot.isSlopeCompleted = true;
 		}
 		updatePlotExist(newPlot.real_name,newPlot.recorder_name,LIST_PLOTS,newPlot);
+		//console.log("Update NEW Plot : ");
+		//console.log(LIST_PLOTS)
 		window.localStorage.setItem(email + "_" + "LIST_LANDINFO_PLOTS", JSON.stringify(LIST_PLOTS));
 		window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
 		$state.go('landinfo.newplot');
@@ -925,7 +1873,7 @@ angular.module('ionicApp.controller',['chart.js'])
 /****************************************/
 /** AddPlot_LandUse_Ctrl **/
 /****************************************/
-.controller('AddPlot_LandUse_Ctrl',function($scope,$state){
+.controller('AddPlot_LandUse_Ctrl',function($scope,$state){	
 	function updatePlotExist(name,recorder_name,JSONArray,newPlot){
 		for (var index = 0; index < JSONArray.length; index++) {
 		    var plot = JSONArray[index];
@@ -1000,7 +1948,7 @@ angular.module('ionicApp.controller',['chart.js'])
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
 	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
 	
-	console.log(newPlot);
+	//console.log(newPlot);
 	var landuse_grazed = "false";
 	var landuse_grazing = [];
 	$scope.plot_name = newPlot.real_name;
@@ -1014,10 +1962,7 @@ angular.module('ionicApp.controller',['chart.js'])
 	$scope.landuse_current_wildlife= "media/landuse_images/ic_wildlife_grazing.png";
 	
 	/* Pre-processing LandUse data */
-	if (newPlot.isLandUseDoing == null || newPlot.isLandUseDoing == 'null' || newPlot.isLandUseDoing == 'undefined' || newPlot.isLandUseDoing == '' ||  newPlot.isLandUseDoing == false){
-		/* New One */
-		
-	} else if (newPlot.isLandUseDoing == true){
+	if (newPlot.isLandUseDoing == true){
 		/* Edit old one */
 		landuse_grazed = newPlot.grazed;
 		landuse_grazing_string = newPlot.grazing;
@@ -1110,9 +2055,7 @@ angular.module('ionicApp.controller',['chart.js'])
 	
 	
 	$scope.completeAddPlot_LandUse = function(){
-		if (landuse_grazed == null || landuse_grazed == 'null' || landuse_grazed == 'undefined' || landuse_grazed == ''){
-			//newPlot.land_cover = "";
-		} else {
+		if (!isEmpty(landuse_grazed)){
 			newPlot.grazed = landuse_grazed;		
 			newPlot.isLandUseDoing = true;
 		}
@@ -1143,12 +2086,18 @@ angular.module('ionicApp.controller',['chart.js'])
 /** AddPlot_Slopeshape_Ctrl **/
 /****************************************/
 .controller('AddPlot_Slopeshape_Ctrl',function($scope,$state){
+	
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
 	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
 	
-	console.log(newPlot);
+	//console.log(newPlot);
 	var slopeshape_cross_data = "";
 	var slopeshape_down_data = "";
 	
@@ -1162,10 +2111,7 @@ angular.module('ionicApp.controller',['chart.js'])
 	$scope.slopeshape_crossslopeflat = "media/slopeshape_images/ic_crossslopeflat.png";
 	
 	/* Pre-processing LandUse data */
-	if (isEmpty(newPlot.isSlopeShapeDoing)  ||  newPlot.isSlopeShapeDoing == false){
-		/* New One */
-		
-	} else if (newPlot.isSlopeShapeDoing == true){
+	if (newPlot.isSlopeShapeDoing == true){
 		/* Edit old one */
 		if (!isEmpty(newPlot.slope_shape)){
 			list_slope_shape = getListComponents(newPlot.slope_shape.trim(),",");
@@ -1311,12 +2257,17 @@ angular.module('ionicApp.controller',['chart.js'])
 /****************************************/
 .controller('AddPlot_Soilcondition_Ctrl',function($scope,$state){
 
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
 	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
 	
-	console.log(newPlot);
+	//console.log(newPlot);
 	var surface_cracking = "false";
 	var surface_salt = "false";
 	$scope.plot_name = newPlot.real_name;
@@ -1436,6 +2387,11 @@ angular.module('ionicApp.controller',['chart.js'])
 /** AddPlot_Soillayer_Layer_1_Ctrl **/
 /****************************************/
 .controller('AddPlot_Soillayer_Layer_1_Ctrl',function($scope,$state,$ionicPopup, $timeout,$ionicPlatform){
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
@@ -1532,7 +2488,10 @@ angular.module('ionicApp.controller',['chart.js'])
 /****************************************/
 .controller('AddPlot_Soillayer_Layer_2_Ctrl',function($scope,$state,$ionicPopup){
 	
-	
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
 	
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
@@ -1618,6 +2577,12 @@ angular.module('ionicApp.controller',['chart.js'])
 /** AddPlot_Soillayer_Layer_3_Ctrl **/
 /****************************************/
 .controller('AddPlot_Soillayer_Layer_3_Ctrl',function($scope,$state,$ionicPopup){
+	
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
@@ -1699,6 +2664,11 @@ angular.module('ionicApp.controller',['chart.js'])
 /** AddPlot_Soillayer_Layer_4_Ctrl **/
 /****************************************/
 .controller('AddPlot_Soillayer_Layer_4_Ctrl',function($scope,$state,$ionicPopup){
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
@@ -1779,6 +2749,11 @@ angular.module('ionicApp.controller',['chart.js'])
 /** AddPlot_Soillayer_Layer_5_Ctrl **/
 /****************************************/
 .controller('AddPlot_Soillayer_Layer_5_Ctrl',function($scope,$state,$ionicPopup){
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
@@ -1861,6 +2836,11 @@ angular.module('ionicApp.controller',['chart.js'])
 /** AddPlot_Soillayer_Layer_6_Ctrl **/
 /****************************************/
 .controller('AddPlot_Soillayer_Layer_6_Ctrl',function($scope,$state,$ionicPopup){
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
@@ -1941,6 +2921,12 @@ angular.module('ionicApp.controller',['chart.js'])
 /** AddPlot_Soillayer_Layer_7_Ctrl **/
 /****************************************/
 .controller('AddPlot_Soillayer_Layer_7_Ctrl',function($scope,$state,$ionicPopup,$ionicModal){
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
+	
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
@@ -2027,41 +3013,46 @@ angular.module('ionicApp.controller',['chart.js'])
 /****************************************/
 .controller('AddPlot_Soillayers_Ctrl',function($scope,$state){
 	
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
 	function initImages(plot){
 		if (plot.isSoilLayer_1_Completed == true) {
-			$scope.add_plot_soil_layer_1 = "img/check-mark-th.png";
+			$scope.add_plot_soil_layer_1 = "img/lpks_green_checkmark.png";
 		} else {
-			$scope.add_plot_soil_layer_1 = "img/check-mark-white-th.png";
+			$scope.add_plot_soil_layer_1 = "img/lpks_empty_checkmark.png";
 		}
 		if (plot.isSoilLayer_2_Completed == true) {
-			$scope.add_plot_soil_layer_2 = "img/check-mark-th.png";
+			$scope.add_plot_soil_layer_2 = "img/lpks_green_checkmark.png";
 		} else {
-			$scope.add_plot_soil_layer_2 = "img/check-mark-white-th.png";
+			$scope.add_plot_soil_layer_2 = "img/lpks_empty_checkmark.png";
 		}
 		if (plot.isSoilLayer_3_Completed == true) {
-			$scope.add_plot_soil_layer_3 = "img/check-mark-th.png";
+			$scope.add_plot_soil_layer_3 = "img/lpks_green_checkmark.png";
 		} else {
-			$scope.add_plot_soil_layer_3 = "img/check-mark-white-th.png";
+			$scope.add_plot_soil_layer_3 = "img/lpks_empty_checkmark.png";
 		}
 		if (plot.isSoilLayer_4_Completed == true) {
-			$scope.add_plot_soil_layer_4 = "img/check-mark-th.png";
+			$scope.add_plot_soil_layer_4 = "img/lpks_green_checkmark.png";
 		} else {
-			$scope.add_plot_soil_layer_4 = "img/check-mark-white-th.png";
+			$scope.add_plot_soil_layer_4 = "img/lpks_empty_checkmark.png";
 		}
 		if (plot.isSoilLayer_5_Completed == true) {
-			$scope.add_plot_soil_layer_5 = "img/check-mark-th.png";
+			$scope.add_plot_soil_layer_5 = "img/lpks_green_checkmark.png";
 		} else {
-			$scope.add_plot_soil_layer_5 = "img/check-mark-white-th.png";
+			$scope.add_plot_soil_layer_5 = "img/lpks_empty_checkmark.png";
 		}
 		if (plot.isSoilLayer_6_Completed == true) {
-			$scope.add_plot_soil_layer_6 = "img/check-mark-th.png";
+			$scope.add_plot_soil_layer_6 = "img/lpks_green_checkmark.png";
 		} else {
-			$scope.add_plot_soil_layer_6 = "img/check-mark-white-th.png";
+			$scope.add_plot_soil_layer_6 = "img/lpks_empty_checkmark.png";
 		}
 		if (plot.isSoilLayer_7_Completed == true) {
-			$scope.add_plot_soil_layer_7 = "img/check-mark-th.png";
+			$scope.add_plot_soil_layer_7 = "img/lpks_green_checkmark.png";
 		} else {
-			$scope.add_plot_soil_layer_7 = "img/check-mark-white-th.png";
+			$scope.add_plot_soil_layer_7 = "img/lpks_empty_checkmark.png";
 		}
 	}
 	
@@ -2073,7 +3064,7 @@ angular.module('ionicApp.controller',['chart.js'])
 	
 	$scope.plot_name = newPlot.real_name;
 	
-	console.log(newPlot);
+	//console.log(newPlot);
 	
 	/* Full fill the images */
 	initImages(newPlot);
@@ -2097,49 +3088,419 @@ angular.module('ionicApp.controller',['chart.js'])
 /****************************************/
 /** AddPlot_Photos_Ctrl **/
 /****************************************/
-.controller('AddPlot_Photos_Ctrl',function($scope,$state, $cordovaCamera){
+.controller('AddPlot_Photos_Ctrl',function($scope,$state, $cordovaCamera){	
 	var recorder_name = window.localStorage.getItem('current_email');
 	var email = recorder_name;
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
 	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
-	
-
+	console.log(newPlot);
 	$scope.plot_name = newPlot.real_name;
 	
-	$scope.takePicture = function() {
-        var options = { 
-            quality : 75, 
-            destinationType : Camera.DestinationType.DATA_URL, 
-            sourceType : Camera.PictureSourceType.CAMERA, 
-            allowEdit : true,
-            encodingType: Camera.EncodingType.JPEG,
-            targetWidth: 300,
-            targetHeight: 300,
-            popoverOptions: CameraPopoverOptions,
-            saveToPhotoAlbum: false
-        };
-
-        $cordovaCamera.getPicture(options).then(function(imageData) {
-            $scope.imgURI = "data:image/jpeg;base64," + imageData;
-        }, function(err) {
-            // An error occured. Show a message to the user
-        });
-    };
-
-	$scope.goBack = function() {
+	var soil_pit_photo_data_url = newPlot.soil_pit_photo_data_url;
+	if (isEmpty(soil_pit_photo_data_url)){
+		soil_pit_photo_data_url = "";
+	} 
+	$scope.soil_pit_photo_data_url = soil_pit_photo_data_url;
 	
-         $state.go('landinfo.newplot');
+	var soil_sample_photo_data_url = newPlot.soil_sample_photo_data_url;
+	if (isEmpty(soil_sample_photo_data_url)){
+		soil_sample_photo_data_url = "";
+	}
+	$scope.soil_sample_photo_data_url = soil_sample_photo_data_url;
+	
+	var landscape_north_photo_data_url = newPlot.landscape_north_photo_data_url;
+	if (isEmpty(landscape_north_photo_data_url)){
+		landscape_north_photo_data_url = "";
+	}
+	$scope.landscape_north_photo_data_url = landscape_north_photo_data_url;
+	
+	var landscape_east_photo_data_url = newPlot.landscape_east_photo_data_url;
+	if (isEmpty(landscape_east_photo_data_url)){
+		landscape_east_photo_data_url = "";
+	}
+	$scope.landscape_east_photo_data_url = landscape_east_photo_data_url;
+	
+	var landscape_south_photo_data_url = newPlot.landscape_south_photo_data_url;
+	if (isEmpty(landscape_south_photo_data_url)){
+		landscape_south_photo_data_url = "";
+	}
+	$scope.landscape_south_photo_data_url = landscape_south_photo_data_url;
+	
+	var landscape_west_photo_data_url = newPlot.landscape_west_photo_data_url;
+	if (isEmpty(landscape_west_photo_data_url)){
+		landscape_west_photo_data_url = "";
+	}
+	$scope.landscape_west_photo_data_url = landscape_west_photo_data_url;
+	
+	/* Control Navigator for Photos */
+	var typeBrowser = getTypeWebBrowser();
+	if (typeBrowser == "DEVICE") {
+		/* Run on device */
+		$scope.navigator_soil_pit_photo = "landinfo.take_photo_soil_pit_device";
+		$scope.navigator_soil_sample_photo = "landinfo.take_photo_soil_sample_device";
+		$scope.navigator_landscape_photos = "landinfo.take_photos_landscape";
+	} else {
+		$scope.navigator_soil_pit_photo = "landinfo.take_photo_soil_pit_browser";
+		$scope.navigator_soil_sample_photo = "landinfo.take_photo_soil_sample_browser";
+		$scope.navigator_landscape_photos = "landinfo.take_photos_landscape";
+	}
+	
+	
+	$scope.completeAddPlot_Photos = function() {
+		//console.log("Vao day");
+		if (!isEmpty(newPlot.soil_pit_photo_data_url) 
+				|| !isEmpty(newPlot.soil_sample_photo_data_url)
+				|| !isEmpty(newPlot.landscape_north_photo_data_url)
+				|| !isEmpty(newPlot.landscape_east_photo_data_url)
+				|| !isEmpty(newPlot.landscape_south_photo_data_url)
+	            || !isEmpty(newPlot.landscape_west_photo_data_url)
+				){
+			newPlot.isPhotosDoing = true;
+			newPlot.isPhotosCompleted = true;
+		}
+		//console.log("Vao day 2");
+		updatePlotExist(newPlot.real_name,newPlot.recorder_name,LIST_PLOTS,newPlot);
+		window.localStorage.setItem(email + "_" + "LIST_LANDINFO_PLOTS", JSON.stringify(LIST_PLOTS));
+		window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+        $state.go('landinfo.newplot');
     };
-
+    
+ 
 })
+/****************************************/
+/** Take_Photo_Soil_Pit_Device_Ctrl **/
+/****************************************/
+.controller('Take_Photo_Soil_Pit_Device_Ctrl',function($scope,$state,$ionicLoading,$http,$cordovaCamera){
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+    $scope.pictureURL = 'http://placehold.it/300x300';
+	var options = {
+		      quality: 100,
+		      destinationType: Camera.DestinationType.DATA_URL,
+		      sourceType: Camera.PictureSourceType.CAMERA,
+		      allowEdit: false,
+		      encodingType: Camera.EncodingType.JPEG,
+		      targetWidth: 640,
+		      targetHeight: 480,
+		      popoverOptions: CameraPopoverOptions,
+		      saveToPhotoAlbum: false,
+		      correctOrientation:true
+    };
+	var dataURL = "";
+	$scope.takePicture = function() {
+		$cordovaCamera.getPicture(options)
+		.then(function(imageData){
+			$scope.pictureURL = "data:image/jpeg;base64," + imageData;
+			dataURL = $scope.pictureURL;
+		}, function(error) {
+			console.log("Camera error : " + angular.toJson(error));
+		});
+	};
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading soil pit photo. Please wait...'
+	    });
+    	
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:dataURL, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.soil_pit_photo_data_url = data.trim();
+					newPlot.soil_pit_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.photos');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+	
+	$scope.saveSoilPitPicture = function() {
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_soil_pit.jpg"
+		self_upload(image_name,"soil_pit");
+	};
+	
+	
+})
+/****************************************/
+/** Take_Photo_Soil_Sample_Device_Ctrl **/
+/****************************************/
+.controller('Take_Photo_Soil_Sample_Device_Ctrl',function($scope,$state,$ionicLoading,$http,$cordovaCamera){
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+    $scope.pictureURL = 'http://placehold.it/300x300';
+	var options = {
+		      quality: 100,
+		      destinationType: Camera.DestinationType.DATA_URL,
+		      sourceType: Camera.PictureSourceType.CAMERA,
+		      allowEdit: false,
+		      encodingType: Camera.EncodingType.JPEG,
+		      targetWidth: 640,
+		      targetHeight: 480,
+		      popoverOptions: CameraPopoverOptions,
+		      saveToPhotoAlbum: false,
+		      correctOrientation:true
+    };
+	var dataURL = "";
+	$scope.takePicture = function() {
+		$cordovaCamera.getPicture(options)
+		.then(function(imageData){
+			$scope.pictureURL = "data:image/jpeg;base64," + imageData;
+			dataURL = $scope.pictureURL;
+		}, function(error) {
+			console.log("Camera error : " + angular.toJson(error));
+		});
+	};
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading soil sample photo. Please wait...'
+	    });
+    	
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:dataURL, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.soil_sample_photo_data_url = data.trim();
+					newPlot.soil_sample_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.photos');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+	
+	$scope.saveSoilSamplePicture = function() {
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_soil_sample.jpg"
+		self_upload(image_name,"soil_sample");
+	};
+})
+/****************************************/
+/** Take_Photo_Soil_Pit_Browser_Ctrl **/
+/****************************************/
+.controller('Take_Photo_Soil_Pit_Browser_Ctrl',function($scope,$state,$http,$ionicLoading){  
+		var typeBrowser = getTypeWebBrowser();
+		if (typeBrowser != "FIREFOX"){
+			alert("Take picture by Camera now only works well for FireFox Web Browser ! You are using " + typeBrowser + ", that may not work");
+		}
+    	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+    	
+		var canvas = document.getElementById("canvas");
+		var context = canvas.getContext("2d");
+		var video = document.getElementById("video");
+		var streaming = false;
+		var access_token = "";
+		/* Test thu nghiem */
+		navigator.getMedia = ( navigator.getUserMedia ||
+	            navigator.webkitGetUserMedia ||
+	            navigator.mozGetUserMedia ||
+	            navigator.msGetUserMedia);
+	
+		navigator.getMedia(
+		    {
+		      video: true,
+		     audio: false
+		    },
+		    function(stream) {
+		       if (navigator.mozGetUserMedia) {
+		           video.mozSrcObject = stream;
+		       } else {
+		           var vendorURL = window.URL || window.webkitURL;
+		            video.src = vendorURL.createObjectURL(stream);
+		      }
+		      video.play();
+		    },
+		    function(err) {
+		      console.log("An error occured! " + err );
+		    }
+		);
+		
+		video.addEventListener('canplay', function(ev){
+			if (!streaming) {
+				streaming = true;
+			}
+		}, false);
+		
+		
+		
+		function auth() {
+	        var config = {
+	          'client_id': '254673914223-tv4pvoig9ouql2puvsuigmiuabaj87u8.apps.googleusercontent.com',
+	          'scope': 'https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/devstorage.full_control'
+	        };
+	        gapi.auth.authorize(config, function() {
+	            console.log(gapi.auth.getToken());
+	            var access_token = gapi.auth.getToken().access_token;
+	            context.drawImage(video, 0, 0, 640, 480);
+	    		var dataURL = canvas.toDataURL('image/jpeg', 0.5);
+	    		var imageData = dataURL;
+	    		imageData = imageData.replace(/^data:.*;base64,/, "");
+		    	blobImageData = atob(imageData);
+	    		console.log(blobImageData);
+	    		$.ajax({
+	 	           type: 'POST',
+	 	           url: 'https://www.googleapis.com/upload/storage/v1/b/landpks-bucket/o?uploadType=media&name=test.jpg',
+	 	           headers: {
+	 	              'Authorization': 'Bearer ' + access_token,
+	 	              'Content-Lenght': imageData.length,
+	 	              'Content-Type': 'image/jpeg'
+	 	           },
+	 	           data: blobImageData
+	 	        }).done(function (result, textStatus, jqXHR) {
+	 	                console.log('success : ' + textStatus);
+	 	                console.log(JSON.stringify(result));
+	 	        }).fail(function (jqXHR, textStatus, errorThrown) {
+	 	                console.log('fail : ' + textStatus + ' desc : ' + SJON.stringify(jqXHR));
+	 	        });
+	        });      
+	    };
+	    
+	    function self_upload(file_name,type){
+	    	$ionicLoading.show({
+		           template: 'Uploading soil pit photo. Please wait...'
+		    });
+	    	context.drawImage(video, 0, 0, 640, 480);
+	    	var dataURL = canvas.toDataURL('image/jpeg', 1);
+	    	var imageData = dataURL;
+		    $http({
+				    method: 'POST',
+				    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+				    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+				    transformRequest: function(obj) {
+				        var str = [];
+				        for(var p in obj)
+				        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+				        return str.join("&");
+				    },
+				    data: { img_data:imageData, file_name:file_name, type:type },
+		    }).success(
+					function(data, status, headers, config) {
+						$ionicLoading.hide();
+						newPlot.soil_pit_photo_data_url = data.trim();
+						newPlot.soil_pit_photo_url = data.trim();
+						window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+						$state.go('landinfo.photos');
+					}).error(function(err) {
+						$ionicLoading.hide();
+				        alert(err.error,'Error in upload image');
+			});
+	    };
+	    
+		// Trigger photo take
+		document.getElementById("snap").addEventListener("click", function() {
+			//context.drawImage(video, 0, 0, 640, 480);
+			//var dataURL = canvas.toDataURL('image/jpeg', 0.5);
+			
+			/* Upload data to google drive */
+			//auth();
+			/* Upload data to our server */
+			var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_soil_pit.jpg"
+			self_upload(image_name,"soil_pit");
+		});
+})
+/****************************************/
+/** Take_Photo_Soil_Sample_Ctrl **/
+/****************************************/
+.controller('Take_Photo_Soil_Sample_Browser_Ctrl',function($scope,$state,$http,$ionicLoading){
+	var typeBrowser = getTypeWebBrowser();
+	if (typeBrowser != "FIREFOX"){
+		alert("Take picture by Camera now only works well for FireFox Web Browser ! You are using " + typeBrowser + ", that may not work");
+	}
+	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var video = document.getElementById("video");
 
+	var videoObj = { "video": true };
+	var errBack = function(error) {
+		console.log(error);
+		console.log("Video capture error: " + error.code); 
+	};
 
+	if(navigator.getUserMedia) { // Standard
+		navigator.getUserMedia(videoObj, function(stream) {
+			video.src = stream;
+			video.play();
+		}, errBack);
+	} else if(navigator.webkitGetUserMedia) { // WebKit-prefixed
+		navigator.webkitGetUserMedia(videoObj, function(stream){
+			video.src = window.webkitURL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	} else if(navigator.mozGetUserMedia) { // Firefox-prefixed
+		navigator.mozGetUserMedia(videoObj, function(stream){
+			video.src = window.URL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	}
+	
+	function self_upload(file_name,type){
+    	$ionicLoading.show({
+	           template: 'Uploading soil sample photo. Please wait...'
+	    });
+    	context.drawImage(video, 0, 0, 640, 480);
+    	var dataURL = canvas.toDataURL('image/jpeg', 1);
+    	var imageData = dataURL;
+	    $http({
+			    method: 'POST',
+			    url: 'http://128.123.177.13/APEX/External_PHP_Project/LandPKS_Upload_Image/LandPKS_Upload_Image.php',
+			    headers: {'Content-type': 'application/x-www-form-urlencoded'},
+			    transformRequest: function(obj) {
+			        var str = [];
+			        for(var p in obj)
+			        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+			        return str.join("&");
+			    },
+			    data: { img_data:imageData, file_name:file_name, type:type },
+	    }).success(
+				function(data, status, headers, config) {
+					$ionicLoading.hide();
+					newPlot.soil_sample_photo_data_url = data.trim();
+					newPlot.soil_sample_photo_url = data.trim();
+					window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+					$state.go('landinfo.photos');
+				}).error(function(err) {
+					$ionicLoading.hide();
+			        alert(err.error,'Error in upload image');
+		});
+    };
+    
+	// Trigger photo take
+	document.getElementById("snap").addEventListener("click", function() {
+		context.drawImage(video, 0, 0, 640, 480);
+		/* Upload data to google drive */
+		//auth();
+		/* Upload data to our server */
+		var image_name = newPlot.recorder_name + "_" + newPlot.real_name + "_soil_sample.jpg"
+		self_upload(image_name,"soil_sample");
+	});
+})
 /****************************************/
 /** AddPlot_Review_Ctrl **/
 /****************************************/
 .controller('AddPlot_Review_Ctrl',function($scope,$state,$ionicLoading,$http){
 	/* Get Authentication data */
-	var json_auth_data = JSON.parse(window.localStorage.getItem("current_json_auth_data"));
+	var json_auth_data = window.localStorage.getItem("current_json_auth_data");
 	if (isEmpty(json_auth_data.auth_key)){
 		document.getElementById('btnSubmitPlot').setAttribute("disabled","disabled");
 	}
@@ -2186,18 +3547,20 @@ angular.module('ionicApp.controller',['chart.js'])
 				    	 texture_for_soil_horizon_6:newPlot.texture.soil_horizon_6,
 				    	 texture_for_soil_horizon_7:newPlot.texture.soil_horizon_7,
 				    	 surface_salt:newPlot.surface_salt, surface_cracking:newPlot.surface_cracking,
-				    	 soil_pit_photo_url:'',soil_samples_photo_url:'',landscape_north_photo_url:'',
-				    	 landscape_east_photo_url:'',landscape_south_photo_url:'',landscape_west_photo_url:'',
-				    	 notes:newPlot.notes
+				    	 soil_pit_photo_url:newPlot.soil_pit_photo_url,soil_samples_photo_url:newPlot.soil_sample_photo_url,landscape_north_photo_url:newPlot.landscape_north_photo_url,
+				    	 landscape_east_photo_url:newPlot.landscape_east_photo_url,landscape_south_photo_url:newPlot.landscape_south_photo_url,landscape_west_photo_url:newPlot.landscape_west_photo_url,notes:newPlot.notes
 				    }
 				    
 			}).success(
 					function(data, status, headers, config) {
 						alert("Plot is submitted already");
+						window.localStorage.setItem("PREVIOUS_PAGE","ADD_NEW_PLOT_SUCCESS");
+						window.localStorage.setItem("delete_plot_name",newPlot.name);
+						window.localStorage.setItem("delete_recorder_name",newPlot.recorder_name);
 						$state.go('landinfo.plots');
 					}).error(function(err) {
 						$ionicLoading.hide();
-				        alert(err.error,'Submit Plot Error');
+				        alert(err.error,'Error in submit Plot');
 			});
 		
 		   
@@ -2222,16 +3585,177 @@ angular.module('ionicApp.controller',['chart.js'])
 	
 	$scope.currentPlot.slopeshape_down_data = slopeshape_down_data;
 	$scope.currentPlot.slopeshape_cross_data = slopeshape_cross_data;
+	
+	
+	/* Process Images for Review Page */
+	var current_plot = $scope.currentPlot;
+	$scope.landcover_selected_plot ="";
+	if (!isEmpty(current_plot.land_cover)){
+		var land_cover_text = current_plot.land_cover.toUpperCase().trim();
+		if (isEmpty(current_plot.land_cover)){
+			$scope.landcover_selected_plot = "media/landcover_images/ic_unknown.png";
+		} else {
+			if (land_cover_text == "TREE"){
+				$scope.landcover_selected_plot = "media/landcover_images/ic_tree.png";
+			} else if (land_cover_text == "SHRUBLAND") {
+				$scope.landcover_selected_plot = "media/landcover_images/ic_shrub.png";
+			} else if (land_cover_text == "GRASSLAND") {
+				$scope.landcover_selected_plot = "media/landcover_images/ic_grass_land.png"; 
+			} else if (land_cover_text == "SAVANNA") {
+				$scope.landcover_selected_plot = "media/landcover_images/ic_savanna.png";
+			} else if (land_cover_text == "GARDEN/MIXED") {
+				$scope.landcover_selected_plot = "media/landcover_images/ic_garden_mixed.png";
+			} else if (land_cover_text == "CROPLAND") {
+				$scope.landcover_selected_plot = "media/landcover_images/ic_cropland.png";
+			} else if (land_cover_text == "DEVELOPED") {
+				$scope.landcover_selected_plot = "media/landcover_images/ic_developed.png"; 
+			} else if (land_cover_text == "BARREN") {
+				$scope.landcover_selected_plot = "media/landcover_images/ic_barren.png";
+			} else if (land_cover_text == "WATER") {
+				$scope.landcover_selected_plot = "media/landcover_images/ic_water.png";
+			} else {
+				$scope.landcover_selected_plot = "media/landcover_images/ic_unknown.png";
+			}	
+		}
+	} else {
+		$scope.landcover_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	
+	$scope.flooding_selected_plot ="";
+	if (!isEmpty(current_plot.flooding)){
+		var flooding_text = current_plot.flooding.toUpperCase().trim();
+		if (flooding_text == "TRUE"){
+			$scope.flooding_selected_plot = "media/landcover_images/ic_flooded.png";
+		} else if (flooding_text == "FALSE") {
+			$scope.flooding_selected_plot = "media/landcover_images/ic_not_flooded.png";
+		} else {
+			$scope.flooding_selected_plot = "media/landcover_images/ic_unknown.png";
+		} 
+	} else {
+		$scope.flooding_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	
+	
+	$scope.grazed_selected_plot ="";
+	if (!isEmpty(current_plot.grazed)){
+		var grazed_text = current_plot.grazed.toUpperCase().trim();
+		if (grazed_text == "TRUE"){
+			$scope.grazed_selected_plot = "media/landuse_images/ic_grazed.png";
+		} else if (grazed_text == "FALSE") {
+			$scope.grazed_selected_plot = "media/landuse_images/ic_not_grazed.png";
+		} else {
+			$scope.grazed_selected_plot = "media/landcover_images/ic_unknown.png";
+		}
+	} else {
+		$scope.grazed_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	 
+	$scope.slope_selected_plot ="";
+	if (!isEmpty(current_plot.slope)){
+		var slope_text = current_plot.slope.toUpperCase().trim();
+		if (slope_text == "FLAT (0-2%)"){
+			$scope.slope_selected_plot = "media/slope_images/ic_slope_flat.png";
+		} else if (slope_text == "GENTLE (3-5%)") {
+			$scope.slope_selected_plot = "media/slope_images/ic_slope_gentle.png";
+		} else if (slope_text == "MODERATE (6-10%)"){
+			$scope.slope_selected_plot = "media/slope_images/ic_slope_moderate.png";
+		} else if (slope_text == "ROLLING (11-15%)") {
+			$scope.slope_selected_plot = "media/slope_images/ic_slope_rolling.png";
+		} else if (slope_text == "HILLY (16-30%)") {
+			$scope.slope_selected_plot = "media/slope_images/ic_slope_hilly.png";
+		} else if (slope_text == "STEEP (31-60%)") {
+			$scope.slope_selected_plot= "media/slope_images/ic_slope_steep.png";
+		} else if (slope_text == "VERYSTEEP (60-100%)") {
+			$scope.slope_selected_plot= "media/slope_images/ic_slope_very_steep.png";
+		} else {
+			$scope.slope_selected_plot = "media/landcover_images/ic_unknown.png";
+		}
+	} else {
+		$scope.slope_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+
+	
+	$scope.down_slopeshapre_selected_plot ="";
+	if (!isEmpty(slopeshape_down_data)){
+		var down_slopeshapre_text = slopeshape_down_data.toUpperCase().trim();
+		if (down_slopeshapre_text == "CONVEX"){
+			$scope.down_slopeshapre_selected_plot = "media/slopeshape_images/ic_downslopeconvex.png";
+		} else if (down_slopeshapre_text == "CONCAVE") {
+			$scope.down_slopeshapre_selected_plot = "media/slopeshape_images/ic_downslopeconcave.png";
+		} else if (down_slopeshapre_text == "FLAT" || down_slopeshapre_text == "LINEAR") {
+			$scope.down_slopeshapre_selected_plot = "media/slopeshape_images/ic_downslopeflat.png";
+		} else {
+			$scope.down_slopeshapre_selected_plot = "media/landcover_images/ic_unknown.png";
+		}
+	} else {
+		$scope.down_slopeshapre_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	
+	$scope.cross_slopeshapre_selected_plot ="";
+	if (!isEmpty(slopeshape_cross_data)){
+		var cross_slopeshapre_text = slopeshape_cross_data.toUpperCase().trim();
+		if (cross_slopeshapre_text == "CONVEX"){
+			$scope.cross_slopeshapre_selected_plot = "media/slopeshape_images/ic_crossslopeconvex.png";
+		} else if (cross_slopeshapre_text == "CONCAVE") {
+			$scope.cross_slopeshapre_selected_plot = "media/slopeshape_images/ic_crossslopeconcave.png";
+		} else if (cross_slopeshapre_text == "FLAT" || cross_slopeshapre_text == "LINEAR") {
+			$scope.cross_slopeshapre_selected_plot = "media/slopeshape_images/ic_crossslopeflat.png";
+		} else {
+			$scope.cross_slopeshapre_selected_plot = "media/landcover_images/ic_unknown.png";
+		}
+	} else {
+		$scope.cross_slopeshapre_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	
+	
+	
+	$scope.surface_cracked_selected_plot ="";
+	if (!isEmpty(current_plot.surface_cracking)){
+		var surface_cracked_text = current_plot.surface_cracking.toUpperCase().trim();
+		if (surface_cracked_text == "TRUE"){
+			$scope.surface_cracked_selected_plot = "media/soilcondition_images/ic_soil_cracks.png";
+		} else if (surface_cracked_text == "FALSE") {
+			$scope.surface_cracked_selected_plot = "media/soilcondition_images/ic_no_soil_cracks.png";
+		} else {
+			$scope.surface_cracked_selected_plot = "media/landcover_images/ic_unknown.png";
+		}
+	} else {
+		$scope.surface_cracked_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	
+	$scope.surface_salt_selected_plot ="";
+	if (!isEmpty(current_plot.surface_salt)){
+		var surface_salt_text = current_plot.surface_salt.toUpperCase().trim();
+		if (surface_salt_text == "TRUE"){
+			$scope.surface_salt_selected_plot = "media/soilcondition_images/ic_surface_salt.png";
+		} else if (surface_salt_text == "FALSE") {
+			$scope.surface_salt_selected_plot = "media/soilcondition_images/ic_no_surface_salt.png";
+		} else {
+			$scope.surface_salt_selected_plot = "media/landcover_images/ic_unknown.png";
+		}
+	} else {
+		$scope.surface_salt_selected_plot = "media/landcover_images/ic_unknown.png";
+	}
+	
+	/* End Procress images */
+	
 
 	$scope.goBack = function() {
         $state.go('landinfo.newplot');
     };
+    
+    $scope.gotoAddPlot_Edit_PlotID = function(){
+		window.localStorage.setItem("PREVIOUS_PAGE","ADD_PLOT_EDIT");
+		$state.go('landinfo.plotid');
+	};
     
 })
 /****************************************/
 /** AddPlot_LandCover_Ctrl **/
 /****************************************/
 .controller('AddPlot_LandCover_Ctrl',function($scope,$state){
+
+	
 	
 	function seeToast2(message, duration) {
 		toastr.clear();
@@ -2398,8 +3922,6 @@ angular.module('ionicApp.controller',['chart.js'])
 	var email = recorder_name;
 	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
 	var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
-	
-	console.log(newPlot);
 	var landcover_part1_data = "";
 	var landcover_part2_data = "";
 	var flooding_data = "";
@@ -2429,8 +3951,37 @@ angular.module('ionicApp.controller',['chart.js'])
 		newPlot.isLandCoverDoing = true;
 	} 
 
+	$scope.completeAddPlot_LandCover_Move = function(des){
+		if (landcover_part1_data == null || landcover_part1_data == 'null' || landcover_part1_data == 'undefined' || landcover_part1_data == ''){
+			//newPlot.land_cover = "";
+		} else {
+			newPlot.land_cover = landcover_part1_data;		
+			newPlot.isLandCoverDoing = true;
+		}
+		
+		
+		if (!isEmptry(flooding_data)){
+			newPlot.flooding = flooding_data;
+			newPlot.isLandCoverDoing = true;
+		}
+		
+		if (!isEmptry(newPlot.land_cover) && (!isEmptry(newPlot.flooding))){
+			newPlot.isLandCoverCompleted = true;
+		}
 
-
+		updatePlotExist(newPlot.real_name,newPlot.recorder_name,LIST_PLOTS,newPlot);
+		window.localStorage.setItem(email + "_" + "LIST_LANDINFO_PLOTS", JSON.stringify(LIST_PLOTS));
+		window.localStorage.setItem("current_edit_plot",JSON.stringify(newPlot));
+		console.log(des);
+		
+		if (des == "PLOTID"){
+			$state.go('landinfo.plotid');
+		} else if (des == "LANDUSE") {
+			$state.go('landinfo.landuse');
+		} else {
+			$state.go('landinfo.newplot');
+		}
+	};
 	
 	$scope.completeAddPlot_LandCover = function(){
 		if (landcover_part1_data == null || landcover_part1_data == 'null' || landcover_part1_data == 'undefined' || landcover_part1_data == ''){
@@ -2602,6 +4153,12 @@ angular.module('ionicApp.controller',['chart.js'])
 /** AddPlot_PlotID_Ctrl **/
 /****************************************/
 .controller('AddPlot_PlotID_Ctrl',function($scope,$state,$ionicHistory,$ionicPopup){
+	
+//	var email = window.localStorage.getItem('current_email');
+//	if (isEmpty(email)){
+//		$state.go('landinfo.accounts');
+//	}
+	
 	$scope.data = {};
 	function checkExistName(recorder_name,name, JSONArray){
 		var hasMatch =false;
@@ -2761,7 +4318,30 @@ angular.module('ionicApp.controller',['chart.js'])
 				    
 				    if (isActived == true){
 					    $scope.newPlot_PlotID = newPlot_PlotID;
-					    var newPlot = {isActived:isActived, isPlotIDCompleted : isPlotIDCompleted, id:"",name:recorder_name + "-" + name, real_name:name ,recorder_name:recorder_name, test_plot:testPlot, organization : organization, latitude:latitude, longitude:longitude, notes:""};
+					    var newPlot = {isActived:isActived, 
+					    		       isPlotIDCompleted : isPlotIDCompleted,
+					    		       isLandCoverDoing:false,
+					    		       isLandCoverCompleted: false,
+					    		       isLandUseDoing:false,
+					    		       isLandUseCompleted: false,
+					    		       isSlopeCompleted: false,
+					    		       isSlopeDoing: false,
+					    		       isSlopeShapeCompleted: false,
+					    		       isSlopeShapeDoing: false,
+					    		       isSoilConditionCompleted:false,
+					    		       isSoilConditionDoing:false,
+					    		       isSoilLayersCompleted:false,
+					    		       isSoilLayersDoing:false,
+					    		       isPhotosCompleted:false,
+					    		       isPhotosDoing:false,
+					    		       id:"",
+					    		       name:recorder_name + "-" + name, 
+					    		       real_name:name,
+					    		       recorder_name:recorder_name,
+					    		       test_plot:testPlot, organization : organization,
+					    		       latitude:latitude,
+					    		       longitude:longitude,
+					    		       notes:""};
 					    if (checkExistName(recorder_name,name,LIST_PLOTS) == false) {
 					    	if (!isEmpty($scope.data.notes)){
 					    		newPlot.notes = $scope.data.notes;
@@ -2779,11 +4359,10 @@ angular.module('ionicApp.controller',['chart.js'])
 			    	alert("Plot Name is already used. Please try other name");
 			    }
 	    	} else {
+	    		window.localStorage.getItem("PREVIOUS_PAGE") === "ADD_NEW_PLOT_NOT_SUCCESS";
 	    		$state.go('landinfo.plots');
 	    	}
-	    };
-	    
-		
+	    };	
 	} else if (window.localStorage.getItem("PREVIOUS_PAGE") === "ADD_PLOT_EDIT"){
 		var newPlot = JSON.parse(window.localStorage.getItem("current_edit_plot"));
 		var recorder_name = window.localStorage.getItem('current_email');
@@ -2827,8 +4406,6 @@ angular.module('ionicApp.controller',['chart.js'])
 			 } else {
 			    	isPlotIDCompleted = false;
 			 }
-			 
-			 //var newPlot = {isActived:true, isPlotIDCompleted : isPlotIDCompleted, id:"",name:recorder_name + "-" + name, real_name:name ,recorder_name:recorder_name, test_plot:testPlot, organization : organization, latitude:latitude, longitude:longitude};
 			 newPlot.isActived = true;
 			 newPlot.isPlotIDCompleted = isPlotIDCompleted;
 			 newPlot.name = recorder_name + "-" + name;
@@ -2852,12 +4429,12 @@ angular.module('ionicApp.controller',['chart.js'])
 		};
 	}    
 })
-
-
 /****************************************/
 /** ListPlotsCtrl Controller **/
 /****************************************/
 .controller('ListPlotsCtrl', function($scope,$state, $http, Scopes, $ionicHistory,$ionicLoading) {
+
+	
     $scope.title = 'Landinfo';
 
     function isPlotInCloud(plot){
@@ -2869,6 +4446,7 @@ angular.module('ionicApp.controller',['chart.js'])
     }		
 		
 	var email = window.localStorage.getItem('current_email');
+	var recorder_name = email;
 	console.log("LIST of " + email);
 	var previous_page = window.localStorage.getItem("PREVIOUS_PAGE");
 	
@@ -2880,7 +4458,7 @@ angular.module('ionicApp.controller',['chart.js'])
 	
 	console.log(previous_page);
 	if (previous_page === "LOGIN_PAGE") {
-	   console.log("1st Time After Login : get data from API");
+	   console.log("1st Time After Login : get data from API - Refresh data - all data from Cloud");
 	   $http.get('http://128.123.177.21:8080/query', {
 			params : {
 				action : "get",
@@ -2891,16 +4469,26 @@ angular.module('ionicApp.controller',['chart.js'])
 				version : ""
 			}
 		}).success(function(data) {
-	
-	       $scope.plots = data;
+		   
+		   /* Test sort data by alphabet of plot_name */
+		   
+			/* Sort list of plot based on alphabet of plot_name */
+	  		var LIST_PLOTS_SORTED = data;
+	  		LIST_PLOTS_SORTED.sort(function(a, b){
+	  		    	    if(getRealPlotName(email,a.name).toUpperCase().trim() < getRealPlotName(email,b.name).toUpperCase().trim()) return -1;
+	  		    	    if(getRealPlotName(email,a.name).toUpperCase().trim() > getRealPlotName(email,b.name).toUpperCase().trim()) return 1;
+	  		    	    return 0;
+	  	    });
+			
+	       $scope.plots = LIST_PLOTS_SORTED;
 	       console.log($scope.plots.length);
 	       
 	       for(var index = 0 ; index < $scope.plots.length; index ++){
 				var plot = $scope.plots[index];
 				if (isPlotInCloud(plot) == true){
-					$scope.plots[index].img_src = "img/check-mark-th.png";
+					$scope.plots[index].img_src = "img/lpks_green_checkmark.png";
 				} else {
-					$scope.plots[index].img_src = "img/check-mark-white-th.png";
+					$scope.plots[index].img_src = "img/lpks_empty_checkmark.png";
 				}
 			}
 	       
@@ -2916,22 +4504,104 @@ angular.module('ionicApp.controller',['chart.js'])
 			$ionicLoading.hide();
 			alert(err.error);
 		});
-	   
 	    window.localStorage.setItem("PREVIOUS_PAGE","LIST_PLOT_PAGE");
-	    //var previous_page = window.localStorage.getItem("PREVIOUS_PAGE");
-	    //console.log(previous_page);
+	} else if (previous_page === "ADD_NEW_PLOT_SUCCESS") {
+		var delete_plot_name = window.localStorage.getItem("delete_plot_name");
+		var delete_recorder_name = window.localStorage.getItem("delete_recorder_name");
+		var recorder_name = window.localStorage.getItem('current_email');
+        if (delete_recorder_name === recorder_name){
+        	/* Extract list of local caching plots */
+        	var LIST_PLOTS = JSON.parse(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
+        	for(var index = 0 ; index < LIST_PLOTS.length ; index ++){
+        		var plot = LIST_PLOTS[index];
+        		if (plot.name === delete_plot_name && plot.recorder_name === delete_recorder_name){
+        			if (index > 0){
+        				LIST_PLOTS.splice(index,1);
+        			}
+        		}
+        	}
+        	var LIST_LOCAL_CACHE_PLOTS = [];
+        	for(var index = 0 ; index < LIST_PLOTS.length; index ++){
+        		var plot = LIST_PLOTS[index];
+        		if (!isPlotInCloud(plot)){
+        			LIST_LOCAL_CACHE_PLOTS.push(plot);
+        		}
+        	}
+        	
+        	/* Get list of plots from Cloud */
+        	$http.get('http://128.123.177.21:8080/query', {
+    			params : {
+    				action : "get",
+    				object : "landinfo",
+    				recorder_name : email,
+    				display : "",
+    				delimiter : ",",
+    				version : ""
+    			}
+    		}).success(function(data) {
+    		
+    	       for(var index = 0 ; index < data.length; index ++){
+	   				var plot = data[index];
+	   				if (isPlotInCloud(plot) == true){
+	   					data[index].img_src = "img/lpks_green_checkmark.png";
+					} else {
+						data[index].img_src = "img/lpks_empty_checkmark.png";
+					}
+   		       }
+    	       
+    	       for(var index = 0 ; index < data.length; index ++){
+   				   var plot = data[index];
+   				   LIST_LOCAL_CACHE_PLOTS.push(plot);
+   		       }
+    	       
+    	       window.localStorage.setItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS", JSON.stringify(LIST_LOCAL_CACHE_PLOTS));
+           	   
+           	   $scope.plots = {};
+           	   
+	           /* Sort list of plot based on alphabet of plot_name */
+	  		   var LIST_PLOTS_SORTED = LIST_LOCAL_CACHE_PLOTS;
+	  		   LIST_PLOTS_SORTED.sort(function(a, b){
+	  		    	    if(getRealPlotName(email,a.name).toUpperCase().trim() < getRealPlotName(email,b.name).toUpperCase().trim()) return -1;
+	  		    	    if(getRealPlotName(email,a.name).toUpperCase().trim() > getRealPlotName(email,b.name).toUpperCase().trim()) return 1;
+	  		    	    return 0;
+	  		   });
+           	   
+   		       $scope.plots = LIST_PLOTS_SORTED;
+    	       
+   		       $ionicLoading.hide();
+    	     
+    		}).error(function(err) {
+    			$ionicLoading.hide();
+    			$scope.plots = {};
+     		    $scope.plots = LIST_LOCAL_CACHE_PLOTS;
+    			alert(err.error);
+    		});	
+        	
+        }
 	} else {
 		clearAllCache();
 		/**********************/
 		/* Syncing with Cloud */
 		/**********************/
-		console.log("Caching & Syncing : Queyry API to check Are there any newplots in Clound of this account ?");
+		console.log("Caching & Syncing : Queyry API to check Are there any newplots in Cloud of this account ?");
 		var areThereAnyNewPlots = false;
 		
 		if (areThereAnyNewPlots == false) {
 		     console.log("Caching & Syncing :  Get Data From Local Cache - NO NEWS");
 		     $scope.plots = {};
-		     $scope.plots = JSON.parse(window.localStorage.getItem(email + "_" + "LIST_LANDINFO_PLOTS"));
+		     //console.log(window.localStorage.getItem(recorder_name + "_" + "LIST_LANDINFO_PLOTS"));
+		     var LIST_PLOTS =  JSON.parse(window.localStorage.getItem(email + "_" + "LIST_LANDINFO_PLOTS"));
+		     
+		     /* Sort list of plot based on alphabet of plot_name */
+		     var LIST_PLOTS_SORTED = LIST_PLOTS;
+		     LIST_PLOTS_SORTED.sort(function(a, b){
+		    	    if(getRealPlotName(email,a.name).toUpperCase().trim() < getRealPlotName(email,b.name).toUpperCase().trim()) return -1;
+		    	    if(getRealPlotName(email,a.name).toUpperCase().trim() > getRealPlotName(email,b.name).toUpperCase().trim()) return 1;
+		    	    return 0;
+		     });
+		     
+		     $scope.plots = LIST_PLOTS_SORTED;
+		     
 		} else {
 			/* Caching & Syncing : Query plots from Cloud that are not stored in Local Caching */
 			 console.log("Caching & Syncing :  Query new plots in Cloud and update with Local Cache");
@@ -2940,13 +4610,13 @@ angular.module('ionicApp.controller',['chart.js'])
 		for(var index = 0 ; index < $scope.plots.length; index ++){
 			var plot = $scope.plots[index];
 			if (isPlotInCloud(plot) == true){
-				$scope.plots[index].img_src = "img/check-mark-th.png";
+				$scope.plots[index].img_src = "img/lpks_green_checkmark.png";
 			} else {
-				$scope.plots[index].img_src = "img/check-mark-white-th.png";
+				$scope.plots[index].img_src = "img/lpks_empty_checkmark.png";
 			}
 		}
 		
-		console.log($scope.plots);
+		//console.log($scope.plots);
 		$ionicLoading.hide();
 	}
 
@@ -2987,7 +4657,21 @@ angular.module('ionicApp.controller',['chart.js'])
 /****************************************/
 /** SignIn Controller **/
 /****************************************/
-.controller('SignInCtrl', function($scope, $state, $http, Scopes, $ionicHistory,$ionicLoading) {
+.controller('SignInCtrl', function($scope, $state, $http, Scopes, $ionicHistory,$ionicLoading, $cordovaOauth) {
+	/* Check source using*/
+	var typeBrowser = getTypeWebBrowser();
+	//typeBrowser = "DEVICE";
+	//console.log(typeBrowser)
+	if (typeBrowser == "DEVICE") {
+		document.getElementById("loginGoogleDevice").style.display="block";
+		document.getElementById("loginGoogleWebBrowser").style.display="none";
+	} else {
+		//console.log(document.getElementById("loginGoogleDevice").style.display);
+		document.getElementById("loginGoogleDevice").style.display="none";
+		document.getElementById("loginGoogleWebBrowser").style.display="block";
+	}
+	
+	
 	function checkExist(value, JSONArray){
 		var hasMatch =false;
 		for (var index = 0; index < JSONArray.length; index++) {
@@ -3015,6 +4699,136 @@ angular.module('ionicApp.controller',['chart.js'])
 		//$ionicHistory.clearHistory();
 	}
 	
+	
+	/* Test Login with Google Account */
+	$scope.googleSignIn_Device = function() {
+        $cordovaOauth.google("254673914223-tv4pvoig9ouql2puvsuigmiuabaj87u8.apps.googleusercontent.com", 
+        		            ["https://www.googleapis.com/auth/urlshortener", 
+        		             "https://www.googleapis.com/auth/userinfo.email"])
+        .then(function(result) {
+            var access_token = result.access_token;
+            /* Request to get Email */
+			$http({
+			    method: 'GET',
+			    url: "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + result.access_token,
+			    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+		    }).success(
+				function(data, status, headers, config) {
+					var email = data.email;
+					var password = data.id;
+					var localData = result.access_token;
+			    	var objAuth = window.localStorage.getItem("AUTHENTICATION_LIST");
+					if (objAuth === null || objAuth === 'null'){
+							var listAuthentication = { authentication : []};
+							listAuthentication.authentication.push({
+								"email" : email,
+								"password" : password,
+								"json_auth_data" : localData
+							});
+					} else {
+							var listAuthentication = JSON.parse(objAuth);
+							if (checkExist(email, listAuthentication['authentication']) == false){
+								listAuthentication['authentication'].push({
+									"email" : email,
+									"password" : password,
+									"json_auth_data" : localData
+								});
+							} else {
+								console.log("Update");
+								updateAuthExist(email,localData,listAuthentication['authentication']);
+							}	
+					}
+					window.localStorage.setItem("current_json_auth_data", localData);
+					window.localStorage.setItem("current_email",email);
+					window.localStorage.setItem("current_password",password);
+
+					window.localStorage.setItem("AUTHENTICATION_LIST",JSON.stringify(listAuthentication));
+					window.localStorage.setItem("PREVIOUS_PAGE","LOGIN_PAGE");
+					$state.go('landinfo.plots');	
+			}).error(function(err) {
+		    	alert("Authentication Error ! Please re-try again");
+		    });
+        }, function(error) {
+            console.log(error);
+            alert("Authentication Error ! Please re-try again")
+        });
+    };
+	
+    /* Test Login with Google Account */
+	$scope.googleSignIn_WebBrowser = function() {
+		var params = {
+			'clientid':'254673914223-tv4pvoig9ouql2puvsuigmiuabaj87u8.apps.googleusercontent.com',
+			'cookiepolicy':'single_host_origin',
+			'callback' : loginCallBack,
+			'approvalprompt':'force',
+			'scope' :'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile'
+		};
+		gapi.client.setApiKey("AIzaSyCUYSNGMdVkeinZik6YiCyAQcuI0vIqjZk");
+		gapi.auth.signIn(params);
+		
+		function loginCallBack(result) {
+			console.log(result);
+			var email = "";
+			var password = "";
+			var localData = "";
+			//console.log("ABC" + gapi.auth.getToken());
+			console.log(result.status);
+			if (result.status.google_logged_in === true){
+				console.log("Access Token : " + result.access_token);
+				/* Request to get Email */
+				$http({
+				    method: 'GET',
+				    url: "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + result.access_token,
+				    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+			    }).success(
+					function(data, status, headers, config) {
+						email = data.email;
+						password = data.id;
+					    localData = result.access_token;
+				    	var objAuth = window.localStorage.getItem("AUTHENTICATION_LIST");
+						if (objAuth === null || objAuth === 'null'){
+								var listAuthentication = { authentication : []};
+								listAuthentication.authentication.push({
+									"email" : email,
+									"password" : password,
+									"json_auth_data" : localData
+								});
+						} else {
+								var listAuthentication = JSON.parse(objAuth);
+								if (checkExist(email, listAuthentication['authentication']) == false){
+									listAuthentication['authentication'].push({
+										"email" : email,
+										"password" : password,
+										"json_auth_data" : localData
+									});
+								} else {
+									console.log("Update");
+									updateAuthExist(email,localData,listAuthentication['authentication']);
+								}	
+						}
+						window.localStorage.setItem("current_json_auth_data", localData);
+						window.localStorage.setItem("current_email",email);
+						window.localStorage.setItem("current_password",password);
+	
+						window.localStorage.setItem("AUTHENTICATION_LIST",JSON.stringify(listAuthentication));
+						window.localStorage.setItem("PREVIOUS_PAGE","LOGIN_PAGE");
+						$state.go('landinfo.plots');	
+				}).error(function(err) {
+			    	alert("Authentication Error ! Please re-try again");
+			    });
+			} else {
+				 alert(err.error,'Authentication Error ! Please re-try again');
+			}
+			
+		};
+    };
+    
+    if (typeof String.prototype.startsWith != 'function') {
+        String.prototype.startsWith = function (str){
+            return this.indexOf(str) == 0;
+        };
+    }
+    
 	/* Test before click login */
 	$scope.signIn = function(email, password) {
 		        $ionicLoading.show({
@@ -3071,6 +4885,6 @@ angular.module('ionicApp.controller',['chart.js'])
 						}).error(function(err) {
 							$ionicLoading.hide();
 					        alert(err.error,'Authentication Error');
-				});  // End HTTP POST LOGIN
+				        });  // End HTTP POST LOGIN
 	}; // End SignIn
 }); // End Controller SignInCtrl
