@@ -4663,13 +4663,34 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 	//typeBrowser = "DEVICE";
 	//console.log(typeBrowser)
 	if (typeBrowser == "DEVICE") {
-		document.getElementById("loginGoogleDevice").style.display="block";
-		document.getElementById("loginGoogleWebBrowser").style.display="none";
+		var isIPad = ionic.Platform.isIPad();
+		var isIOS = ionic.Platform.isIOS();
+		var isAndroid = ionic.Platform.isAndroid();
+		var isWindowsPhone = ionic.Platform.isWindowsPhone();
+		if (isIPad || isIOS || isAndroid || isWindowsPhone){
+			console.log("Detect Devices");
+			document.getElementById("loginGoogleDevice").style.display="block";
+			document.getElementById("loginGoogleWebBrowser").style.display="none";
+		} else {
+			console.log("DO NOT KNOW");
+			document.getElementById("loginGoogleDevice").style.display="block";
+			document.getElementById("loginGoogleWebBrowser").style.display="block"; 
+		}
 	} else {
-		//console.log(document.getElementById("loginGoogleDevice").style.display);
-		document.getElementById("loginGoogleDevice").style.display="none";
-		document.getElementById("loginGoogleWebBrowser").style.display="block";
-	}
+		var isIPad = ionic.Platform.isIPad();
+		var isIOS = ionic.Platform.isIOS();
+		var isAndroid = ionic.Platform.isAndroid();
+		var isWindowsPhone = ionic.Platform.isWindowsPhone();
+		if (isIPad || isIOS || isAndroid || isWindowsPhone){
+			console.log("Detect Devices");
+			document.getElementById("loginGoogleDevice").style.display="block";
+			document.getElementById("loginGoogleWebBrowser").style.display="none";
+		} else {
+			console.log("Detect WEB BROWSER");
+			document.getElementById("loginGoogleDevice").style.display="none";
+			document.getElementById("loginGoogleWebBrowser").style.display="block";
+		}
+	} 
 	
 	
 	function checkExist(value, JSONArray){
