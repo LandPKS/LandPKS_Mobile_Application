@@ -65,36 +65,34 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 			  window.addEventListener('deviceorientation', function(eventData) {
 			    // alpha is the compass direction the device is facing in degrees
 			    var dir = eventData.alpha
-			    /*
+			    
 			    if ((dir >= 0 && dir <= 1) || (dir >= 359 && dir <= 360)){
-			    	document.getElementById("div_north").style.display = "block";
-					document.getElementById("div_east").style.display = "none";
-					document.getElementById("div_south").style.display = "none";
-					document.getElementById("div_west").style.display = "none";
+			    	document.getElementById("aTagNorth").style.visibility = "visible";
+					document.getElementById("aTagEast").style.visibility = "hidden";
+					document.getElementById("aTagSouth").style.visibility = "hidden";
+					document.getElementById("aTagWest").style.visibility = "hidden";
 					seeToast2("NORTH",2000);
 			    } else if (dir >= 179 && dir <= 181){
-			    	document.getElementById("div_north").style.display = "none";
-					document.getElementById("div_east").style.display = "none";
-					document.getElementById("div_south").style.display = "block";
-					document.getElementById("div_west").style.display = "none";
+			    	document.getElementById("aTagNorth").style.visibility = "hidden";
+					document.getElementById("aTagEast").style.visibility = "hidden";
+					document.getElementById("aTagSouth").style.visibility = "visible";
+					document.getElementById("aTagWest").style.visibility = "hidden";
 					seeToast2("SOUTH",2000);
 			    } else if (dir>= 89 && dir <= 91){
-			    	document.getElementById("div_north").style.display = "none";
-					document.getElementById("div_east").style.display = "block";
-					document.getElementById("div_south").style.display = "none";
-					document.getElementById("div_west").style.display = "none";
+			    	document.getElementById("aTagNorth").style.visibility = "hidden";
+					document.getElementById("aTagEast").style.visibility = "visible";
+					document.getElementById("aTagSouth").style.visibility = "hidden";
+					document.getElementById("aTagWest").style.visibility = "hidden";
 					seeToast2("EAST",2000);
 			    } else if (dir>= 269 && dir <= 271) {
-			    	document.getElementById("div_north").style.display = "none";
-					document.getElementById("div_east").style.display = "none";
-					document.getElementById("div_south").style.display = "none";
-					document.getElementById("div_west").style.display = "block";
+			    	document.getElementById("aTagNorth").style.visibility = "hidden";
+					document.getElementById("aTagEast").style.visibility = "hidden";
+					document.getElementById("aTagSouth").style.visibility = "hidden";
+					document.getElementById("aTagWest").style.visibility = "visible";
 					seeToast2("WEST",2000);
 			    } else {
 			    	
-			    }
-			    */
-			    
+			    } 
 			  }, false);
 		} else {
 			  console.log("Not supported compass");
@@ -102,10 +100,10 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 	} else {
 		/* Run on browser */
 		/* Visible all */
-		document.getElementById("div_north").style.display = "block";
-		document.getElementById("div_east").style.display = "block";
-		document.getElementById("div_south").style.display = "block";
-		document.getElementById("div_west").style.display = "block";
+		document.getElementById("aTagNorth").style.visibility = "visible";
+		document.getElementById("aTagEast").style.visibility = "visible";
+		document.getElementById("aTagSouth").style.visibility = "visible";
+		document.getElementById("aTagWest").style.visibility = "visible";
 		
 		$scope.navigator_landscape_north = "landinfo.take_photo_landscape_north_browser";
 		$scope.navigator_landscape_east = "landinfo.take_photo_landscape_east_browser";
@@ -3502,7 +3500,7 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 /****************************************/
 .controller('AddPlot_Review_Ctrl',function($scope,$state,$ionicLoading,$http){
 	/* Get Authentication data */
-	var json_auth_data = JSON.parse(window.localStorage.getItem("current_json_auth_data"));
+	var json_auth_data = window.localStorage.getItem("current_json_auth_data");
 	if (isEmpty(json_auth_data.auth_key)){
 		document.getElementById('btnSubmitPlot').setAttribute("disabled","disabled");
 	}
@@ -4770,6 +4768,9 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 		
 		function loginCallBack(result) {
 			console.log(result);
+			var email = "";
+			var password = "";
+			var localData = "";
 			//console.log("ABC" + gapi.auth.getToken());
 			console.log(result.status);
 			if (result.status.google_logged_in === true){
@@ -4781,9 +4782,9 @@ angular.module('ionicApp.controller',['chart.js','ngCordova'])
 				    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 			    }).success(
 					function(data, status, headers, config) {
-						var email = data.email;
-						var password = data.id;
-						var localData = result.access_token;
+						email = data.email;
+						password = data.id;
+					    localData = result.access_token;
 				    	var objAuth = window.localStorage.getItem("AUTHENTICATION_LIST");
 						if (objAuth === null || objAuth === 'null'){
 								var listAuthentication = { authentication : []};

@@ -1,0 +1,216 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {
+            "res/xml/config.xml": {
+                "parents": {
+                    "/*": [
+                        {
+                            "xml": "<feature name=\"Keyboard\"><param name=\"android-package\" value=\"com.ionic.keyboard.IonicKeyboard\" /><param name=\"onload\" value=\"true\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Device\"><param name=\"android-package\" value=\"org.apache.cordova.device.Device\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"SplashScreen\"><param name=\"android-package\" value=\"org.apache.cordova.splashscreen.SplashScreen\" /><param name=\"onload\" value=\"true\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Whitelist\"><param name=\"android-package\" value=\"org.apache.cordova.whitelist.WhitelistPlugin\" /><param name=\"onload\" value=\"true\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Camera\"><param name=\"android-package\" value=\"org.apache.cordova.camera.CameraLauncher\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Compass\"><param name=\"android-package\" value=\"org.apache.cordova.deviceorientation.CompassListener\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"InAppBrowser\"><param name=\"android-package\" value=\"org.apache.cordova.inappbrowser.InAppBrowser\" /></feature>",
+                            "count": 1
+                        }
+                    ]
+                }
+            },
+            "AndroidManifest.xml": {
+                "parents": {
+                    "/*": [
+                        {
+                            "xml": "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />",
+                            "count": 1
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "installed_plugins": {
+        "com.ionic.keyboard": {
+            "PACKAGE_NAME": "com.ionicframework.ionicdemo539879"
+        },
+        "cordova-plugin-console": {
+            "PACKAGE_NAME": "com.ionicframework.ionicdemo539879"
+        },
+        "cordova-plugin-device": {
+            "PACKAGE_NAME": "com.ionicframework.ionicdemo539879"
+        },
+        "cordova-plugin-splashscreen": {
+            "PACKAGE_NAME": "com.ionicframework.ionicdemo539879"
+        },
+        "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "com.ionicframework.ionicdemo539879"
+        },
+        "cordova-plugin-geolocation": {
+            "PACKAGE_NAME": "edu.nmsu.landpks.landinfo"
+        },
+        "cordova-plugin-camera": {
+            "PACKAGE_NAME": "org.landpotential.lpks.landinfo"
+        },
+        "cordova-plugin-device-orientation": {
+            "PACKAGE_NAME": "org.landpotential.lpks.landinfo"
+        },
+        "cordova-plugin-inappbrowser": {
+            "PACKAGE_NAME": "org.landpotential.lpks.landinfo"
+        }
+    },
+    "dependent_plugins": {},
+    "modules": [
+        {
+            "file": "plugins/com.ionic.keyboard/www/keyboard.js",
+            "id": "com.ionic.keyboard.keyboard",
+            "pluginId": "com.ionic.keyboard",
+            "clobbers": [
+                "cordova.plugins.Keyboard"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-console/www/logger.js",
+            "id": "cordova-plugin-console.logger",
+            "pluginId": "cordova-plugin-console",
+            "clobbers": [
+                "cordova.logger"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-console/www/console-via-logger.js",
+            "id": "cordova-plugin-console.console",
+            "pluginId": "cordova-plugin-console",
+            "clobbers": [
+                "console"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-device/www/device.js",
+            "id": "cordova-plugin-device.device",
+            "pluginId": "cordova-plugin-device",
+            "clobbers": [
+                "device"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-splashscreen/www/splashscreen.js",
+            "id": "cordova-plugin-splashscreen.SplashScreen",
+            "pluginId": "cordova-plugin-splashscreen",
+            "clobbers": [
+                "navigator.splashscreen"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-whitelist/whitelist.js",
+            "id": "cordova-plugin-whitelist.whitelist",
+            "pluginId": "cordova-plugin-whitelist",
+            "runs": true
+        },
+        {
+            "file": "plugins/cordova-plugin-camera/www/CameraConstants.js",
+            "id": "cordova-plugin-camera.Camera",
+            "pluginId": "cordova-plugin-camera",
+            "clobbers": [
+                "Camera"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-camera/www/CameraPopoverOptions.js",
+            "id": "cordova-plugin-camera.CameraPopoverOptions",
+            "pluginId": "cordova-plugin-camera",
+            "clobbers": [
+                "CameraPopoverOptions"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-camera/www/Camera.js",
+            "id": "cordova-plugin-camera.camera",
+            "pluginId": "cordova-plugin-camera",
+            "clobbers": [
+                "navigator.camera"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-camera/www/CameraPopoverHandle.js",
+            "id": "cordova-plugin-camera.CameraPopoverHandle",
+            "pluginId": "cordova-plugin-camera",
+            "clobbers": [
+                "CameraPopoverHandle"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-device-orientation/www/CompassError.js",
+            "id": "cordova-plugin-device-orientation.CompassError",
+            "pluginId": "cordova-plugin-device-orientation",
+            "clobbers": [
+                "CompassError"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-device-orientation/www/CompassHeading.js",
+            "id": "cordova-plugin-device-orientation.CompassHeading",
+            "pluginId": "cordova-plugin-device-orientation",
+            "clobbers": [
+                "CompassHeading"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-device-orientation/www/compass.js",
+            "id": "cordova-plugin-device-orientation.compass",
+            "pluginId": "cordova-plugin-device-orientation",
+            "clobbers": [
+                "navigator.compass"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-inappbrowser/www/inappbrowser.js",
+            "id": "cordova-plugin-inappbrowser.inappbrowser",
+            "pluginId": "cordova-plugin-inappbrowser",
+            "clobbers": [
+                "cordova.InAppBrowser.open",
+                "window.open"
+            ]
+        }
+    ],
+    "plugin_metadata": {
+        "com.ionic.keyboard": "1.0.4",
+        "cordova-plugin-console": "1.0.1",
+        "cordova-plugin-device": "1.0.1",
+        "cordova-plugin-splashscreen": "2.1.0",
+        "cordova-plugin-whitelist": "1.1.0",
+        "cordova-plugin-geolocation": "1.0.1",
+        "cordova-plugin-camera": "2.1.0",
+        "cordova-plugin-device-orientation": "1.0.2",
+        "cordova-plugin-inappbrowser": "1.0.0"
+    }
+}

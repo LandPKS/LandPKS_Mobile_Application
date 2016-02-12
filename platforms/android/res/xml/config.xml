@@ -51,7 +51,7 @@
     <author email="thanhnh@nmsu.edu" href="http://landpotential.org/">
       LandPKS Developer Team
     </author>
-    <content original-src="index.html" src="http://128.123.11.183:8100" />
+    <content src="index.html" />
     <preference name="webviewbounce" value="false" />
     <preference name="UIWebViewBounce" value="false" />
     <preference name="DisallowOverscroll" value="true" />
